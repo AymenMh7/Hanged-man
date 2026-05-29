@@ -7,7 +7,6 @@ import hangman.managers.SinglePlayerManager;
 import hangman.models.GameSession;
 import hangman.models.Player;
 import hangman.models.ScoreRecord;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -22,74 +21,61 @@ import javafx.stage.Stage;
 import java.util.List;
 
 /**
- * Main container window — owns the {@link Stage} and swaps content via
- * a SINGLE persistent {@link Scene}. By replacing the scene's root
- * (instead of creating new Scenes), the window keeps its size — and
- * whatever maximize/fullscreen state the player set.
+ * Main container window.
  *
- * Visual theme lives in {@code theme.css}; the scenic beach backdrop
- * lives in {@link BackgroundPane}.
+ * <h3>Game-scene layering (bottom → top)</h3>
+ * <ol>
+ * <li>{@link BackgroundPane} — stretches the current background image to fill the window.
+ * Dynamically swaps images to show the pirate's hanging progress.</li>
+ * <li>UI content           — VBox anchored to the RIGHT half:
+ * word tiles, keyboard, status, quit button</li>
+ * <li>Mistakes counter     — overlaid BOTTOM-LEFT corner via StackPane</li>
+ * </ol>
  */
+
 public class GameWindow extends Application {
 
-    private static final String CSS = "/hangman/ui/theme.css";
+    private static final String CSS       = "/hangman/ui/theme.css";
     private static final double INITIAL_W = 980;
     private static final double INITIAL_H = 760;
 
     // ---- state -------------------------------------------------------
     private Stage primaryStage;
-    private Scene scene;                 // ONE scene, root swapped on navigation
+    private Scene scene;
 
     private SinglePlayerManager singleMgr;
     private MultiplayerManager  multiMgr;
 
-    // Bound widgets (held so updateUI() can refresh them)
-    private HangmanCanvas   canvas;
+    // Live game HUD widgets
+    private BackgroundPane  gameBgPane;
     private VirtualKeyboard keyboard;
-    private Label           wordLabel;
+    private HBox            wordTileBox;
     private Label           statusLabel;
     private Label           chancesLabel;
 
-    /**
-     * Convenience entry point so an IDE can launch the game by
-     * right-clicking either this file or {@code Main.java}. Delegates
-     * to {@link hangman.Main#main(String[])} for the friendly
-     * JavaFX-missing error handling.
-     */
-    public static void main(String[] args) {
-        hangman.Main.main(args);
-    }
+    public static void main(String[] args) { hangman.Main.main(args); }
 
     @Override
     public void start(Stage stage) {
         this.primaryStage = stage;
-        stage.setTitle("Pirate's Cove — A Hangman Adventure");
+        stage.setTitle("Pirate's Hangman");
         stage.setOnCloseRequest(e -> DBConnection.getInstance().closeConnection());
 
-        // Build the scene ONCE with a placeholder; subsequent navigation
-        // calls setRoot(...) on this same Scene so the window doesn't
-        // reset to its preferred size on each transition.
         this.scene = new Scene(new StackPane(), INITIAL_W, INITIAL_H);
-        java.net.URL css = getClass().getResource(CSS);
-        if (css != null) {
-            scene.getStylesheets().add(css.toExternalForm());
-        } else {
-            java.io.File f = new java.io.File("src/hangman/ui/theme.css");
-            if (f.exists()) scene.getStylesheets().add(f.toURI().toString());
-        }
+        attachCss(scene.getStylesheets());
         stage.setScene(scene);
         stage.setMinWidth(720);
-        stage.setMinHeight(620);
+        stage.setMinHeight(600);
 
         showMainMenu();
         stage.show();
     }
 
     // =================================================================
-    //                          MAIN MENU
+    //  MAIN MENU
     // =================================================================
     private void showMainMenu() {
-        Label title = styledLabel("PIRATE'S COVE", "title-main");
+        Label title = styledLabel("PIRATE'S COVE",  "title-main");
         Label tag   = styledLabel("Solve the word — or swing from the yardarm", "tagline");
 
         Region divider = new Region();
@@ -106,58 +92,40 @@ public class GameWindow extends Application {
         scores.setOnAction(e -> showLeaderboardPicker());
         quit  .setOnAction(e -> { DBConnection.getInstance().closeConnection(); primaryStage.close(); });
 
-        VBox card = new VBox(14, title, tag, divider,
-                             new Region(), single, multi, scores, quit);
-        card.setAlignment(Pos.CENTER);
-        card.getStyleClass().add("card");
-        card.setMaxWidth(460);
-        card.setMaxHeight(560);
-        card.setPadding(new Insets(36, 40, 36, 40));
-
+        VBox card = menuCard(460, 560);
+        card.getChildren().addAll(title, tag, divider, new Region(),
+                single, multi, scores, quit);
         setRoot(centerWrap(card));
     }
 
-    private Button bigButton(String text, String extraClass) {
-        Button b = new Button(text);
-        b.setPrefSize(300, 48);
-        if (extraClass != null) b.getStyleClass().add(extraClass);
-        return b;
-    }
-
     // =================================================================
-    //                       DIFFICULTY PICKER
+    //  DIFFICULTY PICKER
     // =================================================================
     private void showDifficultyPicker() {
-        Label title    = styledLabel("Choose Your Crew", "title-sub");
-        Label subtitle = styledLabel("Tougher seas leave fewer chances", "tagline");
+        Label title    = styledLabel("Choose Your Crew",                  "title-sub");
+        Label subtitle = styledLabel("Tougher seas leave fewer chances",  "tagline");
 
-        VBox box = new VBox(12, title, subtitle, new Region());
-        box.setAlignment(Pos.CENTER);
-        box.getStyleClass().add("card");
-        box.setMaxWidth(440);
-        box.setMaxHeight(560);
-        box.setPadding(new Insets(32));
+        VBox box = menuCard(440, 560);
+        box.getChildren().addAll(title, subtitle, new Region());
 
-        String[] labels = { "Cabin Boy", "First Mate", "Captain", "Dread Pirate" };
-        Difficulty[] vals = Difficulty.values();
+        String[]    labels = { "Cabin Boy", "First Mate", "Captain", "Dread Pirate" };
+        Difficulty[] vals  = Difficulty.values();
         for (int i = 0; i < vals.length; i++) {
             Difficulty d = vals[i];
-            String label = String.format("%s · %s · %d chances",
-                                         labels[i], d.name(), d.getSinglePlayerChances());
-            Button b = bigButton(label, d == Difficulty.INSANE ? "button-danger" : null);
+            String lbl = String.format("%s  ·  %s  ·  %d chances",
+                    labels[i], d.name(), d.getSinglePlayerChances());
+            Button b = bigButton(lbl, d == Difficulty.INSANE ? "button-danger" : null);
             b.setOnAction(e -> startSinglePlayer(d));
             box.getChildren().add(b);
         }
-
         Button back = bigButton("← Back to Port", null);
         back.setOnAction(e -> showMainMenu());
         box.getChildren().addAll(new Region(), back);
-
         setRoot(centerWrap(box));
     }
 
     // =================================================================
-    //                     SINGLE-PLAYER GAMEPLAY
+    //  SINGLE PLAYER
     // =================================================================
     private void startSinglePlayer(Difficulty diff) {
         this.singleMgr = new SinglePlayerManager(diff);
@@ -165,100 +133,66 @@ public class GameWindow extends Application {
         try {
             singleMgr.startRound();
         } catch (RuntimeException ex) {
-            showError("Could not start round: " + ex.getMessage());
-            return;
+            showError("Could not start round: " + ex.getMessage()); return;
         }
         showGameScene("Solo Run · " + diff.name(), this::onSinglePlayerEnd);
     }
 
     private void onSinglePlayerEnd() {
-        // Top-level try/catch so an exception ANYWHERE in this handler
-        // surfaces as a visible Alert instead of getting eaten by the
-        // EDT (which would leave the player stranded on the game scene
-        // with no popup, no navigation, no clue what went wrong).
         try {
             GameSession s = singleMgr.getActiveSession();
-            if (s == null) {
-                showError("Internal error: active session was null.");
-                showMainMenu();
-                return;
-            }
+            if (s == null) { showError("Internal error: session was null."); showMainMenu(); return; }
+
             if (s.isWon()) {
                 double secs  = s.calculateTimeScore() / 1000.0;
                 long   score = s.calculateScore();
-                String msg = String.format(
-                    "Treasure found in %.2fs · %d chances left%nScore: %d",
-                    secs, s.getRemainingChances(), score);
+                String msg   = String.format(
+                        "Treasure found in %.2fs · %d chances left%nScore: %d",
+                        secs, s.getRemainingChances(), score);
 
-                // Eligibility check hits the DB — wrap it so a missing
-                // column or connection drop tells us clearly.
                 boolean eligible;
-                try {
-                    eligible = singleMgr.checkScoreboardEligibility();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    showError("Couldn't check the leaderboard:\n" + ex.getMessage()
-                            + "\n\nDid you re-run sql/schema.sql after\n"
-                            + "the column was renamed (time_elapsed → score)?");
-                    showInfo(msg);
-                    showMainMenu();
-                    return;
+                try { eligible = singleMgr.checkScoreboardEligibility(); }
+                catch (Exception ex) {
+                    showError("Couldn't check leaderboard:\n" + ex.getMessage());
+                    showInfo(msg); showMainMenu(); return;
                 }
 
                 if (eligible) {
-                    TextInputDialog name = new TextInputDialog("Captain");
-                    styleDialog(name.getDialogPane());
-                    name.setTitle("Wall of Legends");
-                    name.setHeaderText(msg + "\n\nYou cracked the top 10!\n"
-                            + "Your name will be carved into the Wall of Legends.");
-                    name.setContentText("Captain's name:");
-
-                    java.util.Optional<String> result = name.showAndWait();
-                    if (result.isPresent()) {
-                        String captain = result.get().isBlank()
-                                ? "Anonymous"
-                                : result.get().trim();
+                    TextInputDialog dlg = new TextInputDialog("Captain");
+                    styleDialog(dlg.getDialogPane());
+                    dlg.setTitle("Wall of Legends");
+                    dlg.setHeaderText(msg + "\n\nTop 10!  Enter your name:");
+                    dlg.setContentText("Captain:");
+                    dlg.showAndWait().ifPresent(name -> {
+                        String n = name.isBlank() ? "Anonymous" : name.trim();
                         try {
-                            singleMgr.registerHighScore(captain);
-                            showInfo("⚓  " + captain + " etched onto the Wall of Legends!\n"
-                                    + "Score saved: " + score);
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                            showError("Couldn't save your score:\n" + ex.getMessage());
-                        }
-                    } else {
-                        showInfo("Your treasure goes uncatalogued, captain.\nScore: " + score);
-                    }
+                            singleMgr.registerHighScore(n);
+                            showInfo("⚓ " + n + " etched into the Wall of Legends!\nScore: " + score);
+                        } catch (Exception ex) { showError("Couldn't save score:\n" + ex.getMessage()); }
+                    });
                 } else {
-                    showInfo(msg + "\n\n(Not enough for the top 10.)");
+                    showInfo(msg + "\n\n(Not in the top 10.)");
                 }
             } else {
                 showInfo("The sea takes another soul.\nThe word was: " + s.getWordToGuess());
             }
             showMainMenu();
         } catch (Throwable t) {
-            t.printStackTrace();
-            showError("Round end handler crashed:\n"
-                    + t.getClass().getSimpleName() + ": " + t.getMessage());
-            showMainMenu();
+            showError("Round end crashed:\n" + t.getMessage()); showMainMenu();
         }
     }
 
     // =================================================================
-    //                    MULTIPLAYER SETUP / GAMEPLAY
+    //  MULTIPLAYER
     // =================================================================
     private void showPlayerSetup() {
         Label title = styledLabel("A Duel of Captains", "title-sub");
 
-        TextField p1 = new TextField(); p1.setPromptText("Captain 1");
-        TextField p2 = new TextField(); p2.setPromptText("Captain 2");
-        p1.setMaxWidth(280); p2.setMaxWidth(280);
-
+        TextField p1 = field("Captain 1"), p2 = field("Captain 2");
         ComboBox<Difficulty> diff = new ComboBox<>();
         diff.getItems().addAll(Difficulty.values());
         diff.getSelectionModel().select(Difficulty.MEDIUM);
         diff.setMaxWidth(280);
-
         Spinner<Integer> rounds = new Spinner<>(1, 10, 2);
         rounds.setMaxWidth(120);
 
@@ -267,28 +201,20 @@ public class GameWindow extends Application {
         start.setOnAction(e -> {
             String n1 = p1.getText().isBlank() ? "P1" : p1.getText().trim();
             String n2 = p2.getText().isBlank() ? "P2" : p2.getText().trim();
-            this.multiMgr = new MultiplayerManager(
-                    new Player(n1), new Player(n2),
-                    diff.getValue(), rounds.getValue() * 2
-            );
+            this.multiMgr  = new MultiplayerManager(
+                    new Player(n1), new Player(n2), diff.getValue(), rounds.getValue() * 2);
             this.singleMgr = null;
             promptForSecretWord();
         });
         back.setOnAction(e -> showMainMenu());
 
-        VBox card = new VBox(10,
-                title,
+        VBox card = menuCard(440, 640);
+        card.getChildren().addAll(title,
                 fieldLabel("First captain"),  p1,
                 fieldLabel("Second captain"), p2,
                 fieldLabel("Word difficulty"), diff,
                 fieldLabel("Rounds each"),    rounds,
                 new Region(), start, back);
-        card.setAlignment(Pos.CENTER);
-        card.getStyleClass().add("card");
-        card.setMaxWidth(440);
-        card.setMaxHeight(620);
-        card.setPadding(new Insets(28));
-
         setRoot(centerWrap(card));
     }
 
@@ -299,9 +225,8 @@ public class GameWindow extends Application {
 
         Label title = styledLabel(chooser.getAlias() + ", bury your treasure", "title-sub");
         Label rules = styledLabel(
-            "Letters only · " + d.getMinLength() + "–" + d.getMaxLength()
-            + " characters · " + guesser.getAlias() + " — look away!",
-            "tagline");
+                "Letters only · " + d.getMinLength() + "–" + d.getMaxLength()
+                        + " chars · " + guesser.getAlias() + " — look away!", "tagline");
 
         PasswordField word = new PasswordField();
         word.setPromptText("type the secret word...");
@@ -310,140 +235,107 @@ public class GameWindow extends Application {
         Label err = new Label();
         err.setStyle("-fx-text-fill: #A04030; -fx-font-weight: bold;");
 
-        Button go = bigButton("⚓  Bury the Word", "button-primary");
-        Button abandon = bigButton("← Abandon Duel", null);
+        Button go      = bigButton("⚓  Bury the Word", "button-primary");
+        Button abandon = bigButton("← Abandon Duel",   null);
         go.setOnAction(e -> {
-            String secret = word.getText();
-            if (!multiMgr.validateSecretWord(secret)) {
-                err.setText("⚠ Invalid word. Check length and letters-only.");
-                return;
+            if (!multiMgr.validateSecretWord(word.getText())) {
+                err.setText("⚠ Invalid — check length and letters only."); return;
             }
-            multiMgr.startHalfRound(secret);
+            multiMgr.startHalfRound(word.getText());
             showGameScene(
-                guesser.getAlias() + " hunts the word — round "
-                + (multiMgr.getCurrentRound() + 1),
-                this::onMultiplayerHalfRoundEnd);
+                    guesser.getAlias() + " hunts the word — round " + (multiMgr.getCurrentRound() + 1),
+                    this::onMultiplayerHalfRoundEnd);
         });
         abandon.setOnAction(e -> showMainMenu());
 
-        VBox card = new VBox(14, title, rules, word, go, abandon, err);
-        card.setAlignment(Pos.CENTER);
-        card.getStyleClass().add("card");
-        card.setMaxWidth(460);
-        card.setMaxHeight(440);
-        card.setPadding(new Insets(32));
-
+        VBox card = menuCard(460, 440);
+        card.getChildren().addAll(title, rules, word, go, abandon, err);
         setRoot(centerWrap(card));
     }
 
     private void onMultiplayerHalfRoundEnd() {
         try {
-            GameSession s = multiMgr.getActiveSession();
-            Player guesser = multiMgr.getCurrentGuesser();
+            GameSession s      = multiMgr.getActiveSession();
+            Player      guesser = multiMgr.getCurrentGuesser();
             if (s.isWon()) {
-                // Combined score IS the doubloon haul.
                 long pts = s.calculateScore();
                 guesser.addMatchScore((int) pts);
-                double secs = s.calculateTimeScore() / 1000.0;
-                showInfo(String.format(
-                    "%s claims the treasure!%n%d chances left · %.2fs%n+%d doubloons",
-                    guesser.getAlias(), s.getRemainingChances(), secs, pts));
+                showInfo(String.format("%s claims the treasure!%n%d chances · %.2fs%n+%d doubloons",
+                        guesser.getAlias(), s.getRemainingChances(), s.calculateTimeScore()/1000.0, pts));
             } else {
-                showInfo(guesser.getAlias() + " walks the plank.\nThe word was: " + s.getWordToGuess());
+                showInfo(guesser.getAlias() + " walks the plank.\nWord: " + s.getWordToGuess());
             }
-
             multiMgr.switchTurn();
-
-            if (multiMgr.isMatchOver()) {
-                handleMatchEnd();
-            } else {
-                promptForSecretWord();
-            }
+            if (multiMgr.isMatchOver()) handleMatchEnd(); else promptForSecretWord();
         } catch (Throwable t) {
-            t.printStackTrace();
-            showError("Duel handler crashed:\n"
-                    + t.getClass().getSimpleName() + ": " + t.getMessage());
-            showMainMenu();
+            showError("Duel handler crashed:\n" + t.getMessage()); showMainMenu();
         }
     }
 
     private void handleMatchEnd() {
-        Player winner = multiMgr.determineWinner();
-        if (winner == null) {
-            showInfo("Both crews tied! A sudden-death duel begins...");
-            runTieBreaker();
-            return;
-        }
-        String msg = "⚓ " + winner.getAlias() + " rules the seas! ⚓\n\n"
-                   + multiMgr.getPlayer1() + "\n"
-                   + multiMgr.getPlayer2();
-        showMatchEndPopup(msg);
+        Player w = multiMgr.determineWinner();
+        if (w == null) { showInfo("Tied! Sudden-death duel..."); runTieBreaker(); return; }
+        String msg = "⚓ " + w.getAlias() + " rules the seas! ⚓\n\n"
+                + multiMgr.getPlayer1() + "\n" + multiMgr.getPlayer2();
+        Label title = styledLabel("THE VOYAGE ENDS", "title-sub");
+        Label body  = new Label(msg);
+        body.setStyle("-fx-font-size: 16px; -fx-text-fill: #3A2818; -fx-font-family: Georgia,serif;");
+        body.setWrapText(true); body.setAlignment(Pos.CENTER);
+        Button again = bigButton("⚓  Set Sail Again", "button-primary");
+        Button menu  = bigButton("⌂  Return to Port",  null);
+        again.setOnAction(e -> { multiMgr.resetMatch(); promptForSecretWord(); });
+        menu .setOnAction(e -> showMainMenu());
+        VBox card = menuCard(480, 420);
+        card.getChildren().addAll(title, body, new Region(), again, menu);
+        setRoot(centerWrap(card));
     }
 
     private void runTieBreaker() {
-        try {
-            multiMgr.startTieBreaker();
-        } catch (RuntimeException ex) {
-            showError("Tiebreaker failed: " + ex.getMessage());
-            showMainMenu();
-            return;
-        }
+        try { multiMgr.startTieBreaker(); }
+        catch (RuntimeException ex) { showError("Tiebreaker failed: " + ex.getMessage()); showMainMenu(); return; }
         showGameScene("⚡  THE STORM BREAKS  ⚡", () -> {
             GameSession s = multiMgr.getActiveSession();
             Player guesser = multiMgr.getCurrentGuesser();
             if (s.isWon()) {
-                // Combined score from the tiebreaker tilts the match.
                 long pts = s.calculateScore();
                 guesser.addMatchScore((int) pts);
-                showInfo(guesser.getAlias() + " survives the tempest!  +" + pts + " doubloons");
+                showInfo(guesser.getAlias() + " survives!  +" + pts + " doubloons");
             } else {
-                showInfo("The storm claims no one. The word was: " + s.getWordToGuess());
+                showInfo("Storm claims no one. Word: " + s.getWordToGuess());
                 multiMgr.switchTurn();
             }
             handleMatchEnd();
         });
     }
 
-    private void showMatchEndPopup(String msg) {
-        Label title = styledLabel("THE VOYAGE ENDS", "title-sub");
-        Label body  = new Label(msg);
-        body.setStyle("-fx-font-size: 16px; -fx-text-fill: #3A2818; -fx-font-family: Georgia,serif;");
-        body.setWrapText(true);
-        body.setAlignment(Pos.CENTER);
-
-        Button again = bigButton("⚓  Set Sail Again", "button-primary");
-        Button menu  = bigButton("⌂  Return to Port", null);
-        again.setOnAction(e -> { multiMgr.resetMatch(); promptForSecretWord(); });
-        menu .setOnAction(e -> showMainMenu());
-
-        VBox card = new VBox(16, title, body, new Region(), again, menu);
-        card.setAlignment(Pos.CENTER);
-        card.getStyleClass().add("card");
-        card.setMaxWidth(480);
-        card.setMaxHeight(420);
-        card.setPadding(new Insets(36));
-
-        setRoot(centerWrap(card));
-    }
-
     // =================================================================
-    //                          GAME SCENE
+    //  GAME SCENE  ← KEY METHOD
     // =================================================================
+    /**
+     * Builds the game screen with a three-layer root:
+     * <pre>
+     *   StackPane (gameRoot)
+     *     ├─ BackgroundPane  (bg image fills 100% of window)
+     *     ├─ HangmanCanvas   (transparent Pane, also fills 100%;
+     *     │                   pirate ImageViews bound to parent size)
+     *     └─ uiLayer         (transparent StackPane for all controls)
+     *          ├─ topBar     centred at top
+     *          ├─ rightPane  word + keyboard + quit, anchored right
+     *          └─ chancesLabel  anchored bottom-left
+     * </pre>
+     */
     private void showGameScene(String headerText, Runnable onRoundEnd) {
-        Label header = styledLabel(headerText, "title-sub");
 
-        canvas   = new HangmanCanvas();
-        keyboard = new VirtualKeyboard();
-
-        wordLabel    = new Label();
-        wordLabel.getStyleClass().add("word-display");
-
+        // ── widgets ──────────────────────────────────────────────────
+        keyboard    = new VirtualKeyboard();
         chancesLabel = new Label();
         chancesLabel.getStyleClass().add("chances-label");
-
         statusLabel  = new Label();
 
-        // Wire keyboard presses into the active session.
+        wordTileBox = new HBox(8);
+        wordTileBox.setAlignment(Pos.CENTER);
+
+        // ── keyboard wiring ──────────────────────────────────────────
         keyboard.setOnLetterPressed(c -> {
             try {
                 GameSession s = activeSession();
@@ -452,64 +344,98 @@ public class GameWindow extends Application {
                 keyboard.disableAndFadeButton(c);
                 updateUI();
                 if (s.isWon() || s.isLost()) {
-                    // Wrap the runLater target so a thrown exception
-                    // surfaces as an Alert rather than vanishing on EDT.
                     Platform.runLater(() -> {
-                        try {
-                            onRoundEnd.run();
-                        } catch (Throwable t) {
-                            t.printStackTrace();
-                            showError("Round end failed:\n"
-                                    + t.getClass().getSimpleName() + ": " + t.getMessage());
-                            showMainMenu();
+                        try { onRoundEnd.run(); }
+                        catch (Throwable t) {
+                            showError("Round end failed:\n" + t.getMessage()); showMainMenu();
                         }
                     });
                 }
             } catch (Throwable t) {
-                t.printStackTrace();
-                showError("Keyboard handler failed:\n" + t.getMessage());
+                showError("Keyboard error:\n" + t.getMessage());
             }
         });
 
-        // Quit-game button: confirm + drop back to main menu.
-        Button quitGame = bigButton("⌂  Return to Port", "button-danger");
-        quitGame.setPrefSize(220, 38);
-        quitGame.setOnAction(e -> confirmAbandon());
+        // ── quit button ───────────────────────────────────────────────
+        Button quit = bigButton("⌂  Return to Port", "button-danger");
+        quit.setPrefSize(220, 38);
+        quit.setOnAction(e -> confirmAbandon());
 
-        VBox rightPane = new VBox(18, wordLabel, chancesLabel, statusLabel, keyboard, quitGame);
+        // ── TOP BAR: wooden sign centred at top ───────────────────────
+        Label sign = new Label("PIRATE'S HANGMAN");
+        sign.getStyleClass().add("game-title-sign");
+        Label roundLbl = new Label(headerText);
+        roundLbl.getStyleClass().add("game-round-label");
+        VBox topBar = new VBox(3, sign, roundLbl);
+        topBar.setAlignment(Pos.CENTER);
+        topBar.setPadding(new Insets(14, 0, 0, 0));
+        topBar.setBackground(Background.EMPTY);
+        topBar.setPickOnBounds(false);
+
+        // ── RIGHT PANE: word + status + keyboard + quit ───────────────
+        // This panel is transparent and sits on the RIGHT side of the
+        // window, leaving the left area free for the pirate to show through.
+        VBox rightPane = new VBox(12, wordTileBox, statusLabel, keyboard, quit);
         rightPane.setAlignment(Pos.CENTER);
+        rightPane.setPadding(new Insets(0, 28, 20, 0));
+        rightPane.setBackground(Background.EMPTY);
+        rightPane.setMaxWidth(530);
 
-        VBox leftPane = new VBox(canvas);
-        leftPane.setAlignment(Pos.CENTER);
-        leftPane.setPadding(new Insets(10));
+        // ── UI LAYER: stacks topBar (top), rightPane (centre-right),
+        //             chancesLabel (bottom-left) ─────────────────────
+        StackPane uiLayer = new StackPane();
+        uiLayer.setBackground(Background.EMPTY);
+        uiLayer.setPickOnBounds(false);
 
-        HBox center = new HBox(40, leftPane, rightPane);
-        center.setAlignment(Pos.CENTER);
-        center.setPadding(new Insets(20));
-        center.getStyleClass().add("card");
+        // topBar — top-centre
+        StackPane.setAlignment(topBar, Pos.TOP_CENTER);
 
-        VBox root = new VBox(16, header, center);
-        root.setAlignment(Pos.CENTER);
-        root.setPadding(new Insets(20));
+        // rightPane — centre-right
+        StackPane.setAlignment(rightPane, Pos.CENTER_RIGHT);
+        StackPane.setMargin(rightPane, new Insets(60, 0, 0, 0));
+
+        // chancesLabel — bottom-left (in the dark footer strip)
+        // chancesLabel — bottom-left (Moved up and right to fit inside the treasure chest)
+        StackPane.setAlignment(chancesLabel, Pos.BOTTOM_LEFT);
+
+// Adjust these values to position it perfectly over your asset box!
+// Insets parameters are: (Top, Right, Bottom, Left)
+        StackPane.setMargin(chancesLabel, new Insets(0, 0, 90, 180));
+
+        uiLayer.getChildren().addAll(topBar, rightPane, chancesLabel);
+
+        // ── GAME ROOT: bg | pirate overlay | ui ──────────────────────
+        // The HangmanCanvas and uiLayer both fill the whole StackPane,
+        // so the canvas's width/height bindings resolve to the full
+        // window size and fractional positioning works correctly.
+        StackPane gameRoot = new StackPane();
+
+        // Assign the background to our class variable so we can change its image later
+        gameBgPane = new BackgroundPane(new StackPane(), "/hangman/resources/background.png");
+
+        // Added ONLY the bg and ui layer (canvas is gone!)
+        gameRoot.getChildren().addAll(gameBgPane, uiLayer);
+
+        StackPane.setAlignment(gameBgPane, Pos.TOP_LEFT);
+        StackPane.setAlignment(uiLayer, Pos.TOP_LEFT);
+
+        gameBgPane.prefWidthProperty().bind(gameRoot.widthProperty());
+        gameBgPane.prefHeightProperty().bind(gameRoot.heightProperty());
+        uiLayer.prefWidthProperty().bind(gameRoot.widthProperty());
+        uiLayer.prefHeightProperty().bind(gameRoot.heightProperty());
 
         updateUI();
-        setRoot(centerWrap(root));
+        setRoot(gameRoot);
     }
 
-    /** Asks the player to confirm abandoning the round. */
     private void confirmAbandon() {
         Alert a = new Alert(Alert.AlertType.CONFIRMATION,
-                "Abandon the voyage and return to port?\n"
-              + "(Your current round will be lost.)",
+                "Abandon and return to port?\n(Round will be lost.)",
                 ButtonType.YES, ButtonType.NO);
         a.setHeaderText("Leaving so soon, captain?");
         styleDialog(a.getDialogPane());
-        a.showAndWait().ifPresent(bt -> {
-            if (bt == ButtonType.YES) {
-                singleMgr = null;
-                multiMgr  = null;
-                showMainMenu();
-            }
+        a.showAndWait().ifPresent(b -> {
+            if (b == ButtonType.YES) { singleMgr = null; multiMgr = null; showMainMenu(); }
         });
     }
 
@@ -519,40 +445,68 @@ public class GameWindow extends Application {
         return null;
     }
 
+    /**
+     * Refreshes all live HUD elements from the current {@link GameSession}.
+     */
     public void updateUI() {
         GameSession s = activeSession();
         if (s == null) return;
-        canvas.drawHangman(s.getMaxChances(), s.getRemainingChances());
-        wordLabel.setText(s.getDisplayWord().toUpperCase());
-        chancesLabel.setText("✦ Chances remaining: " + s.getRemainingChances()
-                + " / " + s.getMaxChances());
-        statusLabel.getStyleClass().removeAll("status-won", "status-lost");
-        if (s.isWon()) {
-            statusLabel.setText("⚓  TREASURE FOUND  ⚓");
-            statusLabel.getStyleClass().add("status-won");
-        } else if (s.isLost()) {
-            statusLabel.setText("☠  LOST AT SEA  ☠");
-            statusLabel.getStyleClass().add("status-lost");
+
+        // ── hangman background stage ─────────────────────────────────
+        int mistakes = s.getMaxChances() - s.getRemainingChances();
+        if (mistakes == 0) {
+            // No mistakes = clean background
+            gameBgPane.setBackgroundImage("/hangman/resources/background.png");
         } else {
-            statusLabel.setText("");
+            String[] paths = {
+                    "/hangman/resources/hat.png",
+                    "/hangman/resources/hat_head.png",
+                    "/hangman/resources/hat_head_torso.png",
+                    "/hangman/resources/hat_head_torso_arms.png",
+                    "/hangman/resources/full_pirate.png"
+            };
+            int stages = paths.length;
+            // Calculate which stage image to show based on max chances
+            int stage = (int) Math.ceil(((double) mistakes / s.getMaxChances()) * stages) - 1;
+            stage = Math.min(stage, stages - 1);
+
+            gameBgPane.setBackgroundImage(paths[stage]);
         }
+        // ── word tiles ───────────────────────────────────────────────
+        wordTileBox.getChildren().clear();
+        for (char ch : s.getHiddenPassword()) {
+            if (ch == ' ') {
+                Region gap = new Region();
+                gap.setPrefWidth(20);
+                wordTileBox.getChildren().add(gap);
+            } else {
+                Label tile = new Label(ch == '_' ? "" : String.valueOf(ch).toUpperCase());
+                tile.getStyleClass().add("word-tile");
+                if (ch == '_') tile.getStyleClass().add("word-tile-hidden");
+                wordTileBox.getChildren().add(tile);
+            }
+        }
+
+        // ── mistakes counter ─────────────────────────────────────────
+        chancesLabel.setText("MISTAKES: " + mistakes + "/" + s.getMaxChances());
+
+        // ── status ───────────────────────────────────────────────────
+        statusLabel.getStyleClass().removeAll("status-won", "status-lost");
+        if      (s.isWon())  { statusLabel.setText("⚓  TREASURE FOUND  ⚓"); statusLabel.getStyleClass().add("status-won"); }
+        else if (s.isLost()) { statusLabel.setText("☠  LOST AT SEA  ☠");    statusLabel.getStyleClass().add("status-lost"); }
+        else                 { statusLabel.setText(""); }
     }
 
     // =================================================================
-    //                       LEADERBOARD VIEW
+    //  LEADERBOARD
     // =================================================================
     private void showLeaderboardPicker() {
         Label title = styledLabel("Wall of Legends", "title-sub");
         Label sub   = styledLabel("Choose a rank to view", "tagline");
+        VBox card   = menuCard(440, 560);
+        card.getChildren().addAll(title, sub, new Region());
 
-        VBox card = new VBox(12, title, sub, new Region());
-        card.setAlignment(Pos.CENTER);
-        card.getStyleClass().add("card");
-        card.setMaxWidth(440);
-        card.setMaxHeight(560);
-        card.setPadding(new Insets(32));
-
-        String[] tiers = { "Cabin Boy", "First Mate", "Captain", "Dread Pirate" };
+        String[]    tiers = { "Cabin Boy", "First Mate", "Captain", "Dread Pirate" };
         Difficulty[] vals = Difficulty.values();
         for (int i = 0; i < vals.length; i++) {
             Difficulty d = vals[i];
@@ -563,98 +517,92 @@ public class GameWindow extends Application {
         Button back = bigButton("← Back to Port", null);
         back.setOnAction(e -> showMainMenu());
         card.getChildren().addAll(new Region(), back);
-
         setRoot(centerWrap(card));
     }
 
     private void showLeaderboard(Difficulty d) {
-        Label title = styledLabel("Wall of Legends · " + d.name(), "title-sub");
-        Label header = styledLabel("       Captain                 Score", "tagline");
+        Label title  = styledLabel("Wall of Legends · " + d.name(), "title-sub");
+        Label header = styledLabel("       Captain                 Score",   "tagline");
 
         ListView<String> list = new ListView<>();
         list.setPrefHeight(380);
         try {
             SinglePlayerManager tmp = new SinglePlayerManager(d);
-            List<ScoreRecord> rows = tmp.getScoreBoard().getTop10(d);
+            List<ScoreRecord> rows  = tmp.getScoreBoard().getTop10(d);
             int rank = 1;
             for (ScoreRecord r : rows) {
                 String medal = rank == 1 ? "⚓" : rank == 2 ? "★" : rank == 3 ? "✦" : "·";
                 list.getItems().add(String.format(" %s  %2d.  %s", medal, rank++, r));
             }
-            if (rows.isEmpty()) {
-                list.getItems().add("   (no legends yet — be the first to claim the treasure)");
-            }
-        } catch (RuntimeException ex) {
-            list.getItems().add("Error: " + ex.getMessage());
-        }
+            if (rows.isEmpty()) list.getItems().add("   (no legends yet)");
+        } catch (RuntimeException ex) { list.getItems().add("Error: " + ex.getMessage()); }
 
         Button back = bigButton("← Back", null);
         back.setOnAction(e -> showLeaderboardPicker());
 
-        VBox card = new VBox(12, title, header, list, back);
-        card.setAlignment(Pos.CENTER);
-        card.getStyleClass().add("card");
-        card.setMaxWidth(560);
-        card.setMaxHeight(620);
-        card.setPadding(new Insets(24));
-
+        VBox card = menuCard(560, 620);
+        card.getChildren().addAll(title, header, list, back);
         setRoot(centerWrap(card));
     }
 
     // =================================================================
-    //                          HELPERS
+    //  HELPERS
     // =================================================================
-    private Label styledLabel(String text, String styleClass) {
-        Label l = new Label(text);
-        l.getStyleClass().add(styleClass);
-        return l;
+    private VBox menuCard(double maxW, double maxH) {
+        VBox card = new VBox(12);
+        card.setAlignment(Pos.CENTER);
+        card.getStyleClass().add("card");
+        card.setMaxWidth(maxW);
+        card.setMaxHeight(maxH);
+        card.setPadding(new Insets(30, 36, 30, 36));
+        return card;
+    }
+
+    private Label styledLabel(String text, String cls) {
+        Label l = new Label(text); l.getStyleClass().add(cls); return l;
     }
 
     private Label fieldLabel(String text) {
-        Label l = new Label(text);
-        l.getStyleClass().add("muted");
-        return l;
+        Label l = new Label(text); l.getStyleClass().add("muted"); return l;
     }
 
-    /**
-     * Wraps any node in a {@link BackgroundPane} so the pirate-cove
-     * scene sits behind it on every screen.
-     */
+    private TextField field(String prompt) {
+        TextField t = new TextField(); t.setPromptText(prompt); t.setMaxWidth(280); return t;
+    }
+
+    private Button bigButton(String text, String extraClass) {
+        Button b = new Button(text);
+        b.setPrefSize(300, 48);
+        if (extraClass != null) b.getStyleClass().add(extraClass);
+        return b;
+    }
+
+    // BEFORE: return new BackgroundPane(inner);
     private Parent centerWrap(Node content) {
         StackPane inner = new StackPane(content);
         inner.setPadding(new Insets(20));
-        return new BackgroundPane(inner);
+        // Pass your new menu background image here!
+        return new BackgroundPane(inner, "/hangman/resources/menu_background.png");
     }
 
-    /**
-     * Swaps the persistent scene's root — preserves window size,
-     * position, and maximize/fullscreen state across screens.
-     */
-    private void setRoot(Parent root) {
-        scene.setRoot(root);
-    }
+    private void setRoot(Parent root) { scene.setRoot(root); }
 
     private void showInfo(String msg) {
         Alert a = new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK);
-        a.setHeaderText(null);
-        styleDialog(a.getDialogPane());
-        a.showAndWait();
+        a.setHeaderText(null); styleDialog(a.getDialogPane()); a.showAndWait();
     }
 
     private void showError(String msg) {
         Alert a = new Alert(Alert.AlertType.ERROR, msg, ButtonType.OK);
-        a.setHeaderText(null);
-        styleDialog(a.getDialogPane());
-        a.showAndWait();
+        a.setHeaderText(null); styleDialog(a.getDialogPane()); a.showAndWait();
     }
 
-    private void styleDialog(DialogPane pane) {
-        java.net.URL css = getClass().getResource(CSS);
-        if (css != null) {
-            pane.getStylesheets().add(css.toExternalForm());
-        } else {
-            java.io.File f = new java.io.File("src/hangman/ui/theme.css");
-            if (f.exists()) pane.getStylesheets().add(f.toURI().toString());
-        }
+    private void styleDialog(DialogPane pane) { attachCss(pane.getStylesheets()); }
+
+    private void attachCss(List<String> sheets) {
+        java.net.URL url = getClass().getResource(CSS);
+        if (url != null) { sheets.add(url.toExternalForm()); return; }
+        java.io.File f = new java.io.File("src/hangman/ui/theme.css");
+        if (f.exists()) sheets.add(f.toURI().toString());
     }
 }
