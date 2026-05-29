@@ -1,0 +1,380 @@
+/* =====================================================================
+   Pirate's Hangman — Master Theme
+   ===================================================================== */
+
+/* =====================================================================
+   ROOT
+   ===================================================================== */
+.root {
+    -fx-font-family: "Georgia", "Cambria", serif;
+    -fx-font-size: 14px;
+    -fx-background-color: transparent;
+}
+
+/* =====================================================================
+   TYPOGRAPHY
+   ===================================================================== */
+.title-main {
+    -fx-font-family: "Cambria", "Georgia", serif;
+    -fx-font-size: 44px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5D3A1A;
+    -fx-effect: dropshadow(gaussian, rgba(255,248,220,0.9), 8, 0.5, 0, 0),
+                dropshadow(gaussian, rgba(93,58,26,0.4), 14, 0.4, 0, 3);
+}
+
+.title-sub {
+    -fx-font-family: "Cambria", "Georgia", serif;
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5D3A1A;
+}
+
+.tagline {
+    -fx-font-family: "Georgia", serif;
+    -fx-font-style: italic;
+    -fx-font-size: 14px;
+    -fx-text-fill: #7A5230;
+}
+
+.label { -fx-text-fill: #3A2818; }
+
+.muted {
+    -fx-text-fill: #7A5230;
+    -fx-font-size: 12px;
+    -fx-font-style: italic;
+}
+
+/* =====================================================================
+   GAME-SCENE TITLE SIGN  (dark wooden plaque, top-centre)
+   ===================================================================== */
+.game-title-sign {
+    -fx-font-family: "Cambria", "Georgia", serif;
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #F0D68A;
+    -fx-background-color:
+        linear-gradient(to bottom,
+            rgba(72,38,8,0.94) 0%,
+            rgba(45,20,3,0.97) 100%);
+    -fx-background-radius: 7;
+    -fx-border-color: #7A4E20;
+    -fx-border-width: 3;
+    -fx-border-radius: 7;
+    -fx-padding: 10 36 10 36;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.72), 16, 0.4, 0, 5),
+                innershadow(gaussian, rgba(200,160,60,0.14), 4, 0.3, 0, 1);
+}
+
+.game-round-label {
+    -fx-font-family: "Georgia", serif;
+    -fx-font-style: italic;
+    -fx-font-size: 13px;
+    -fx-text-fill: #C9A864;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.88), 4, 0.5, 0, 1);
+}
+
+/* =====================================================================
+   WORD TILES  (individual letter boxes in the guessing area)
+   ===================================================================== */
+.word-tile {
+    -fx-min-width:  50px;
+    -fx-min-height: 60px;
+    -fx-max-width:  50px;
+    -fx-max-height: 60px;
+    -fx-alignment: center;
+    -fx-font-family: "Cambria", "Georgia", serif;
+    -fx-font-size: 34px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3A2010;
+    -fx-background-color:
+        linear-gradient(to bottom, #D4B87A 0%, #C09A56 50%, #A87840 100%);
+    -fx-background-radius: 4;
+    -fx-border-color: #4A2E10;
+    -fx-border-width: 2;
+    -fx-border-radius: 4;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.55), 5, 0.35, 0, 3),
+                innershadow(gaussian, rgba(255,240,180,0.28), 3, 0.3, 0, 1);
+}
+
+/* Unrevealed tile — only a bottom underline, nearly transparent */
+.word-tile-hidden {
+    -fx-background-color:
+        linear-gradient(to bottom,
+            rgba(180,140,80,0.28) 0%,
+            rgba(140,100,50,0.22) 100%);
+    -fx-border-color: transparent transparent #A08040 transparent;
+    -fx-border-width: 0 0 3 0;
+    -fx-border-radius: 0;
+    -fx-background-radius: 4;
+    -fx-effect: none;
+}
+
+/* =====================================================================
+   MISTAKES COUNTER  (Repositioned inside the background's treasure chest)
+   ===================================================================== */
+.chances-label {
+    /* Use a thick, clean, high-visibility font style */
+    -fx-font-family: "Arial Black", "Impact", sans-serif;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+
+    /* Solid high-contrast black */
+    -fx-text-fill: #000000;
+
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+
+    /* A very subtle, small shadow to keep the text perfectly sharp and legible */
+    -fx-effect: dropshadow(gaussian, rgba(255,255,255,0.25), 1, 1, 0, 1);
+}
+/* =====================================================================
+   STATUS LABELS  (won / lost)
+   ===================================================================== */
+.status-won {
+    -fx-font-family: "Cambria", "Georgia", serif;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #4ADF6A;
+    -fx-effect: dropshadow(gaussian, rgba(45,122,58,0.55), 10, 0.4, 0, 0);
+}
+
+.status-lost {
+    -fx-font-family: "Cambria", "Georgia", serif;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FF6050;
+    -fx-effect: dropshadow(gaussian, rgba(200,60,40,0.55), 10, 0.4, 0, 0);
+}
+
+/* =====================================================================
+   KEYBOARD  — wooden coin keys
+   ===================================================================== */
+.key {
+    -fx-background-color:
+        radial-gradient(center 50% 30%, radius 80%,
+            #E2BE82 0%, #C39B5A 60%, #9A6D32 100%);
+    -fx-text-fill: #3A2818;
+    -fx-font-family: "Georgia";
+    -fx-font-size: 18px; /* Slightly larger text to fill the tile */
+    -fx-font-weight: bold;
+
+    /* Critical for keeping the letters visible */
+    -fx-alignment: center;
+    -fx-padding: 2;
+
+    /* SHAPE FIX 1: Taller than they are wide, like the reference image */
+    -fx-min-width:  38px;
+    -fx-min-height: 48px;
+    -fx-max-width:  38px;
+    -fx-max-height: 48px;
+
+    /* SHAPE FIX 2: Small rounded corners instead of circles */
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+
+    -fx-border-color: #5D3A1A;
+    -fx-border-width: 2;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.50), 4, 0.35, 0, 2);
+}
+
+.key:hover {
+    -fx-background-color:
+        radial-gradient(center 50% 30%, radius 80%,
+            #FFE7B2 0%, #DAA520 60%, #A87527 100%);
+    -fx-text-fill: #2A1A0A;
+    -fx-border-color: #8B5A2B;
+    -fx-effect: dropshadow(gaussian, rgba(184,134,43,0.75), 8, 0.45, 0, 0);
+}
+
+.key:pressed {
+    -fx-background-color:
+        radial-gradient(center 50% 50%, radius 80%,
+            #7A5520 0%, #50320A 100%);
+    -fx-translate-y: 1;
+    -fx-effect: none;
+}
+
+.key:disabled {
+    -fx-opacity: 0.28;
+    -fx-cursor: default;
+}
+
+/* =====================================================================
+   BUTTONS
+   ===================================================================== */
+.button {
+    -fx-background-color:
+        linear-gradient(to bottom, #C39666 0%, #A87545 45%, #8B5A2B 100%);
+    -fx-text-fill: #FFF3D6;
+    -fx-font-family: "Cambria", "Georgia", serif;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 12 28 12 28;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: #5D3A1A;
+    -fx-border-width: 2;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 8, 0.3, 0, 3),
+                innershadow(gaussian, rgba(255,240,200,0.25), 4, 0.3, 0, 1);
+}
+
+.button:hover {
+    -fx-background-color:
+        linear-gradient(to bottom, #D4A877 0%, #B98554 45%, #9C6A35 100%);
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: #B8862B;
+    -fx-effect: dropshadow(gaussian, rgba(184,134,43,0.65), 12, 0.4, 0, 0),
+                innershadow(gaussian, rgba(255,240,200,0.35), 5, 0.4, 0, 1);
+}
+
+.button:pressed {
+    -fx-background-color: linear-gradient(to bottom, #8B5A2B, #6A4220);
+    -fx-translate-y: 1;
+}
+
+.button-primary {
+    -fx-background-color:
+        linear-gradient(to bottom, #E0B870 0%, #C99644 45%, #A87527 100%);
+    -fx-text-fill: #3A2818;
+    -fx-border-color: #5D3A1A;
+}
+
+.button-primary:hover {
+    -fx-background-color:
+        linear-gradient(to bottom, #F0CB85 0%, #DAA52E 45%, #B8862B 100%);
+    -fx-text-fill: #2A1A0A;
+}
+
+.button-danger { -fx-border-color: #A04030; }
+.button-danger:hover {
+    -fx-text-fill: #FFE8E0;
+    -fx-border-color: #C04A38;
+    -fx-effect: dropshadow(gaussian, rgba(160,64,48,0.65), 12, 0.4, 0, 0);
+}
+
+/* =====================================================================
+   PARCHMENT CARDS  (menus)
+   ===================================================================== */
+.card {
+    -fx-background-color:
+        radial-gradient(center 50% 50%, radius 70%,
+            #F8ECC8 0%, #EAD49B 70%, #C9A864 100%);
+    -fx-background-radius: 14;
+    -fx-border-color: #8B5A2B;
+    -fx-border-width: 3;
+    -fx-border-radius: 14;
+    -fx-padding: 26;
+    -fx-effect: dropshadow(gaussian, rgba(58,40,24,0.55), 22, 0.3, 0, 8);
+}
+
+.divider {
+    -fx-background-color:
+        linear-gradient(to right, transparent, #8B5A2B 50%, transparent);
+    -fx-min-height: 2; -fx-max-height: 2; -fx-pref-height: 2;
+}
+
+/* =====================================================================
+   INPUT FIELDS
+   ===================================================================== */
+.text-field, .password-field {
+    -fx-background-color: #FFF7DE;
+    -fx-text-fill: #3A2818;
+    -fx-prompt-text-fill: #9C7F4B;
+    -fx-border-color: #8B5A2B;
+    -fx-border-width: 2;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 8 12 8 12;
+    -fx-font-family: "Georgia", serif;
+    -fx-font-size: 15px;
+}
+
+.text-field:focused, .password-field:focused {
+    -fx-border-color: #B8862B;
+    -fx-effect: dropshadow(gaussian, rgba(184,134,43,0.35), 6, 0.4, 0, 0);
+}
+
+.combo-box {
+    -fx-background-color: #FFF7DE;
+    -fx-border-color: #8B5A2B;
+    -fx-border-width: 2;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+.combo-box .list-cell {
+    -fx-text-fill: #3A2818;
+    -fx-background-color: transparent;
+    -fx-padding: 6 10 6 10;
+    -fx-font-family: "Georgia", serif;
+}
+.combo-box-popup .list-view {
+    -fx-background-color: #FFF7DE;
+    -fx-border-color: #8B5A2B;
+    -fx-border-width: 2;
+}
+.combo-box-popup .list-cell { -fx-text-fill: #3A2818; -fx-background-color: #FFF7DE; }
+.combo-box-popup .list-cell:hover { -fx-background-color: #DAA520; -fx-text-fill: #3A2818; }
+
+.spinner {
+    -fx-background-color: #FFF7DE;
+    -fx-border-color: #8B5A2B;
+    -fx-border-width: 2;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+.spinner .text-field { -fx-border-width: 0; -fx-background-color: transparent; }
+.spinner .increment-arrow-button,
+.spinner .decrement-arrow-button { -fx-background-color: #8B5A2B; }
+.spinner .increment-arrow,
+.spinner .decrement-arrow { -fx-background-color: #FFF3D6; }
+
+/* =====================================================================
+   LISTVIEW  (leaderboard)
+   ===================================================================== */
+.list-view {
+    -fx-background-color: #FFF7DE;
+    -fx-border-color: #8B5A2B;
+    -fx-border-width: 2;
+    -fx-padding: 4;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+}
+.list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #3A2818;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 15px;
+    -fx-padding: 8 14 8 14;
+}
+.list-view .list-cell:odd  { -fx-background-color: rgba(184,134,43,0.10); }
+.list-view .list-cell:hover { -fx-background-color: rgba(184,134,43,0.22); }
+
+/* =====================================================================
+   DIALOGS
+   ===================================================================== */
+.dialog-pane {
+    -fx-background-color:
+        radial-gradient(center 50% 50%, radius 70%,
+            #F8ECC8 0%, #EAD49B 70%, #C9A864 100%);
+    -fx-border-color: #8B5A2B;
+    -fx-border-width: 3;
+    -fx-padding: 4;
+}
+.dialog-pane .label {
+    -fx-text-fill: #3A2818;
+    -fx-font-family: "Georgia", serif;
+    -fx-font-size: 15px;
+}
+.dialog-pane .content.label { -fx-font-size: 16px; -fx-padding: 10 20 10 20; }
+.dialog-pane .header-panel { -fx-background-color: transparent; }
+.dialog-pane .header-panel .label {
+    -fx-font-family: "Cambria", "Georgia", serif;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5D3A1A;
+    -fx-font-size: 18px;
+}
+.dialog-pane .button-bar .button { -fx-padding: 6 22 6 22; -fx-font-size: 13px; }
