@@ -1,0 +1,31 @@
+# Compiled output
+out/
+*.class
+
+# Downloaded dependencies — users grab their own
+lib/*.jar
+
+# Local DB credentials — copy config.properties.example to config.properties
+config.properties
+
+# IDE — IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# IDE — VS Code workspace state (but keep settings.json + launch.json)
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+
+# IDE — Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# OS junk
+.DS_Store
+Thumbs.db
+*.swp
