@@ -410,13 +410,14 @@ public class GameWindow extends Application {
         quit.setOnAction(e -> confirmAbandon());
 
         // ── TOP BAR: wooden sign centred at top ───────────────────────
-        Label sign = new Label("PIRATE'S HANGMAN");
-        sign.getStyleClass().add("game-title-sign");
         Label roundLbl = new Label(headerText);
-        roundLbl.getStyleClass().add("game-round-label");
-        VBox topBar = new VBox(3, sign, roundLbl);
+        // 2. Upgraded its style class to 'game-title-sign' so it inherits the larger font/colors
+        roundLbl.getStyleClass().add("game-title-sign");
+
+        // 3. Changed the VBox to only include our dynamic label
+        VBox topBar = new VBox(roundLbl);
         topBar.setAlignment(Pos.CENTER);
-        topBar.setPadding(new Insets(14, 0, 0, 0));
+        topBar.setPadding(new Insets(14, 0, 0, 0)); // Slightly increased top padding to center it on the wooden asset
         topBar.setBackground(Background.EMPTY);
         topBar.setPickOnBounds(false);
 
