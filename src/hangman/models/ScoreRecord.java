@@ -1,10 +1,11 @@
 package hangman.models;
 
 /**
- * Data-transfer object: one row from the Leaderboard table.
- * The {@code score} value is the combined (chances + time) score —
- * HIGHER is better. Implements {@link Comparable} so callers can sort
- * lists directly: natural order = best (highest score) first.
+ * Objet de transfert de données : une ligne de la table Leaderboard.
+ * La valeur {@code score} est le score combiné (chances + temps) —
+ * plus c'est ÉLEVÉ, mieux c'est. Implémente {@link Comparable} pour
+ * que les appelants puissent trier les listes directement :
+ * ordre naturel = meilleur (score le plus élevé) en premier.
  */
 public class ScoreRecord implements Comparable<ScoreRecord> {
 
@@ -19,7 +20,7 @@ public class ScoreRecord implements Comparable<ScoreRecord> {
     public String getPlayerName() { return playerName; }
     public long   getScore()      { return score; }
 
-    /** Natural order = highest score first. */
+    /** Ordre naturel = score le plus élevé en premier. */
     @Override
     public int compareTo(ScoreRecord other) {
         return Long.compare(other.score, this.score);

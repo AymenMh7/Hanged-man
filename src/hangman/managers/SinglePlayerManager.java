@@ -6,12 +6,12 @@ import hangman.models.GameSession;
 import hangman.services.ScoreBoard;
 
 /**
- * Solo mode: pulls a random word from the dictionary and gives the
- * player {@link Difficulty#getSinglePlayerChances()} mistakes to spend.
+ * Mode solo : tire un mot aléatoire du dictionnaire et donne au joueur
+ * {@link Difficulty#getSinglePlayerChances()} erreurs à dépenser.
  *
- * Win conditions are checked through the active GameSession; this
- * class only decides what to do <em>after</em> the round (eligibility
- * check + leaderboard write).
+ * Les conditions de victoire sont vérifiées via la GameSession active ;
+ * cette classe décide uniquement quoi faire <em>après</em> la manche
+ * (vérification de l'éligibilité + écriture dans le classement).
  */
 public class SinglePlayerManager extends GameManager {
 
@@ -23,7 +23,7 @@ public class SinglePlayerManager extends GameManager {
         this(difficulty, new DictionaryDAO(), new ScoreBoard());
     }
 
-    /** Full-DI constructor — useful for tests. */
+    /** Constructeur avec injection complète — utile pour les tests. */
     public SinglePlayerManager(Difficulty difficulty, DictionaryDAO dictionary, ScoreBoard scoreBoard) {
         this.currentDifficulty = difficulty;
         this.dictionary        = dictionary;
@@ -43,16 +43,16 @@ public class SinglePlayerManager extends GameManager {
         String word = dictionary.getRandomWord(currentDifficulty);
         if (word == null) {
             throw new IllegalStateException(
-                "Dictionary has no words for " + currentDifficulty);
+                "Le dictionnaire ne contient aucun mot pour " + currentDifficulty);
         }
         int chances = currentDifficulty.getSinglePlayerChances();
         this.activeSession = new GameSession(word, chances);
     }
 
     /**
-     * True if the just-finished round's combined score qualifies for
-     * the top-10 board. Only meaningful after a WIN — lost rounds
-     * shouldn't be saved.
+     * Renvoie true si le score combiné de la manche qui vient de se
+     * terminer qualifie pour le top 10. Significatif uniquement après
+     * une VICTOIRE — les manches perdues ne doivent pas être sauvegardées.
      */
     public boolean checkScoreboardEligibility() {
         if (activeSession == null || !activeSession.isWon()) {
@@ -61,7 +61,7 @@ public class SinglePlayerManager extends GameManager {
         return scoreBoard.isTop10(currentDifficulty, activeSession.calculateScore());
     }
 
-    /** Persists the player's name + combined score to the leaderboard. */
+    /** Sauvegarde le nom du joueur et son score combiné dans le classement. */
     public void registerHighScore(String playerName) {
         if (activeSession == null || !activeSession.isWon()) return;
         scoreBoard.addScore(currentDifficulty, playerName,

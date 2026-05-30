@@ -8,19 +8,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Data Access Object for retrieving words from the Dictionary table.
+ * Data Access Object pour récupérer les mots de la table Dictionary.
  *
- * Keeping the SQL here — and nowhere else — means the rest of the
- * application can swap MySQL for another store without touching the
- * managers or models.
+ * Garder le SQL ici — et nulle part ailleurs — permet au reste de
+ * l'application de remplacer MySQL par un autre stockage sans toucher
+ * aux managers ni aux modèles.
  */
 public class DictionaryDAO {
 
     /**
-     * Fetches one random word for the given difficulty.
+     * Récupère un mot aléatoire pour la difficulté donnée.
      *
-     * @return the word as a String, lowercase, or {@code null} if the
-     *         dictionary has no entry for this difficulty.
+     * @return le mot sous forme de String en minuscules, ou {@code null}
+     *         si le dictionnaire n'a aucune entrée pour cette difficulté.
      */
     public String getRandomWord(Difficulty diff) {
         final String sql =
@@ -35,7 +35,7 @@ public class DictionaryDAO {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to fetch random word for " + diff, e);
+            throw new RuntimeException("Échec de récupération d'un mot aléatoire pour " + diff, e);
         }
         return null;
     }

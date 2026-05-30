@@ -1,7 +1,7 @@
 @echo off
 REM ====================================================================
-REM  Run script for Hangman (Windows)
-REM  Run compile.bat first.
+REM  Script de lancement pour Hangman (Windows)
+REM  Executez compile.bat en premier.
 REM ====================================================================
 
 setlocal enabledelayedexpansion
@@ -10,7 +10,7 @@ if "%PATH_TO_FX%"=="" set PATH_TO_FX=C:\javafx-sdk\lib
 
 for %%F in (lib\mysql-connector-*.jar) do set MYSQL_JAR=%%F
 if "%MYSQL_JAR%"=="" (
-    echo [ERROR] No mysql-connector-*.jar found in lib\.
+    echo [ERREUR] Aucun mysql-connector-*.jar trouve dans lib\.
     exit /b 1
 )
 

@@ -1,10 +1,10 @@
 package hangman.models;
 
 /**
- * A human participant inside a 1v1 multiplayer match.
+ * Un participant humain dans un match multijoueur 1v1.
  *
- * Note: this is separate from the leaderboard. matchScore only lives
- * for the duration of one head-to-head match; it is not persisted.
+ * Remarque : ceci est indépendant du classement. matchScore n'existe
+ * que pour la durée d'un seul match en face à face ; il n'est pas persisté.
  */
 public class Player {
 
@@ -24,12 +24,12 @@ public class Player {
         return matchScore;
     }
 
-    /** Adds the given points to this player's running 1v1 match score. */
+    /** Ajoute les points donnés au score 1v1 en cours de ce joueur. */
     public void addMatchScore(int points) {
         this.matchScore += points;
     }
 
-    /** Wipes the match score back to zero (used at the start of a new match). */
+    /** Remet le score du match à zéro (utilisé au début d'un nouveau match). */
     public void resetMatchScore() {
         this.matchScore = 0;
     }

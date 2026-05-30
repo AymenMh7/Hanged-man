@@ -21,15 +21,16 @@ import javafx.stage.Stage;
 import java.util.List;
 
 /**
- * Main container window.
+ * Fenêtre conteneur principale.
  *
- * <h3>Game-scene layering (bottom → top)</h3>
+ * <h3>Empilage de la scène de jeu (du bas vers le haut)</h3>
  * <ol>
- * <li>{@link BackgroundPane} — stretches the current background image to fill the window.
- * Dynamically swaps images to show the pirate's hanging progress.</li>
- * <li>UI content           — VBox anchored to the RIGHT half:
- * word tiles, keyboard, status, quit button</li>
- * <li>Mistakes counter     — overlaid BOTTOM-LEFT corner via StackPane</li>
+ * <li>{@link BackgroundPane} — étire l'image de fond actuelle pour
+ * remplir la fenêtre. Change dynamiquement les images pour montrer
+ * la progression de la pendaison du pirate.</li>
+ * <li>Contenu UI            — VBox ancré à la moitié DROITE :
+ * tuiles du mot, clavier, statut, bouton quitter</li>
+ * <li>Compteur d'erreurs    — superposé en BAS À GAUCHE via un StackPane</li>
  * </ol>
  */
 
@@ -39,14 +40,14 @@ public class GameWindow extends Application {
     private static final double INITIAL_W = 980;
     private static final double INITIAL_H = 760;
 
-    // ---- state -------------------------------------------------------
+    // ---- état --------------------------------------------------------
     private Stage primaryStage;
     private Scene scene;
 
     private SinglePlayerManager singleMgr;
     private MultiplayerManager  multiMgr;
 
-    // Live game HUD widgets
+    // Widgets HUD du jeu en direct
     private BackgroundPane  gameBgPane;
     private VirtualKeyboard keyboard;
     private HBox            wordTileBox;
@@ -72,7 +73,7 @@ public class GameWindow extends Application {
     }
 
     // =================================================================
-    //  MAIN MENU
+    //  MENU PRINCIPAL
     // =================================================================
     private void showMainMenu() {
         Label title = styledLabel("PIRATE'S COVE",  "title-main");
@@ -99,7 +100,7 @@ public class GameWindow extends Application {
     }
 
     // =================================================================
-    //  DIFFICULTY PICKER
+    //  SÉLECTEUR DE DIFFICULTÉ
     // =================================================================
     private void showDifficultyPicker() {
         Label title    = styledLabel("Choose Your Crew",                  "title-sub");
@@ -125,7 +126,7 @@ public class GameWindow extends Application {
     }
 
     // =================================================================
-    //  SINGLE PLAYER
+    //  MODE SOLO
     // =================================================================
     private void startSinglePlayer(Difficulty diff) {
         this.singleMgr = new SinglePlayerManager(diff);
@@ -133,7 +134,7 @@ public class GameWindow extends Application {
         try {
             singleMgr.startRound();
         } catch (RuntimeException ex) {
-            showError("Could not start round: " + ex.getMessage()); return;
+            showError("Impossible de démarrer la manche : " + ex.getMessage()); return;
         }
         showGameScene("Solo Run · " + diff.name(), this::onSinglePlayerEnd);
     }
@@ -141,7 +142,7 @@ public class GameWindow extends Application {
     private void onSinglePlayerEnd() {
         try {
             GameSession s = singleMgr.getActiveSession();
-            if (s == null) { showError("Internal error: session was null."); showMainMenu(); return; }
+            if (s == null) { showError("Erreur interne : session nulle."); showMainMenu(); return; }
 
             if (s.isWon()) {
                 double secs  = s.calculateTimeScore() / 1000.0;
@@ -153,7 +154,7 @@ public class GameWindow extends Application {
                 boolean eligible;
                 try { eligible = singleMgr.checkScoreboardEligibility(); }
                 catch (Exception ex) {
-                    showError("Couldn't check leaderboard:\n" + ex.getMessage());
+                    showError("Impossible de vérifier le classement :\n" + ex.getMessage());
                     showInfo(msg); showMainMenu(); return;
                 }
 
@@ -168,7 +169,7 @@ public class GameWindow extends Application {
                         try {
                             singleMgr.registerHighScore(n);
                             showInfo("⚓ " + n + " etched into the Wall of Legends!\nScore: " + score);
-                        } catch (Exception ex) { showError("Couldn't save score:\n" + ex.getMessage()); }
+                        } catch (Exception ex) { showError("Impossible de sauvegarder le score :\n" + ex.getMessage()); }
                     });
                 } else {
                     showInfo(msg + "\n\n(Not in the top 10.)");
@@ -178,12 +179,12 @@ public class GameWindow extends Application {
             }
             showMainMenu();
         } catch (Throwable t) {
-            showError("Round end crashed:\n" + t.getMessage()); showMainMenu();
+            showError("Plantage en fin de manche :\n" + t.getMessage()); showMainMenu();
         }
     }
 
     // =================================================================
-    //  MULTIPLAYER
+    //  MULTIJOUEUR
     // =================================================================
     private void showPlayerSetup() {
         Label title = styledLabel("A Duel of Captains", "title-sub");
@@ -258,9 +259,10 @@ public class GameWindow extends Application {
             GameSession s      = multiMgr.getActiveSession();
             Player      guesser = multiMgr.getCurrentGuesser();
             if (s.isWon()) {
-                // CHANCES-ONLY for normal MP rounds: each captain has a
-                // different word to solve, so racing the clock wouldn't
-                // be fair. Time is only factored in on the tiebreaker.
+                // CHANCES UNIQUEMENT pour les manches MP normales :
+                // chaque capitaine a un mot différent à résoudre, donc
+                // courir contre la montre ne serait pas équitable. Le
+                // temps n'est pris en compte que pour le départage.
                 long pts = s.calculateChanceScore();
                 guesser.addMatchScore((int) pts);
                 showInfo(String.format("%s claims the treasure!%n%d chances left%n+%d doubloons",
@@ -271,7 +273,7 @@ public class GameWindow extends Application {
             multiMgr.switchTurn();
             if (multiMgr.isMatchOver()) handleMatchEnd(); else promptForSecretWord();
         } catch (Throwable t) {
-            showError("Duel handler crashed:\n" + t.getMessage()); showMainMenu();
+            showError("Plantage du gestionnaire de duel :\n" + t.getMessage()); showMainMenu();
         }
     }
 
@@ -294,28 +296,30 @@ public class GameWindow extends Application {
     }
 
     private void runTieBreaker() {
-        // Sudden death is now TWO halves: both captains get a round at
-        // the harder difficulty solving THE SAME secret word, then we
-        // compare totals. Whoever scores more across the two halves
-        // wins. If they STILL tie, another pair of half-rounds runs
-        // with a fresh word.
+        // La mort subite est maintenant en DEUX demi-manches : les deux
+        // capitaines reçoivent une manche à la difficulté supérieure
+        // pour résoudre LE MÊME mot secret, puis on compare les totaux.
+        // Celui qui marque le plus à travers les deux demi-manches
+        // gagne. Si l'égalité PERSISTE, une autre paire de demi-manches
+        // est jouée avec un nouveau mot.
         String word;
         try { word = multiMgr.pickTieBreakerWord(); }
-        catch (RuntimeException ex) { showError("Tiebreaker failed: " + ex.getMessage()); showMainMenu(); return; }
+        catch (RuntimeException ex) { showError("Échec du départage : " + ex.getMessage()); showMainMenu(); return; }
         playTieBreakerHalf(false, word);
     }
 
     /**
-     * Plays one half of a sudden-death tiebreaker for whichever captain
-     * is the current guesser, then either hands it to the other captain
-     * (when {@code isSecondHalf == false}) or wraps up via
-     * {@link #handleMatchEnd()} (when both have played).
+     * Joue une moitié d'un départage en mort subite pour le capitaine
+     * qui est actuellement le devineur, puis soit passe la main à
+     * l'autre capitaine (quand {@code isSecondHalf == false}), soit
+     * conclut via {@link #handleMatchEnd()} (quand les deux ont joué).
      *
-     * Both halves receive the SAME secret word so the contest is fair.
+     * Les deux moitiés reçoivent le MÊME mot secret pour que la
+     * compétition soit équitable.
      */
     private void playTieBreakerHalf(boolean isSecondHalf, String word) {
         try { multiMgr.startTieBreakerWithWord(word); }
-        catch (RuntimeException ex) { showError("Tiebreaker failed: " + ex.getMessage()); showMainMenu(); return; }
+        catch (RuntimeException ex) { showError("Échec du départage : " + ex.getMessage()); showMainMenu(); return; }
 
         Player guesser = multiMgr.getCurrentGuesser();
         Player opponent = (guesser == multiMgr.getPlayer1())
@@ -334,7 +338,7 @@ public class GameWindow extends Application {
             GameSession s = multiMgr.getActiveSession();
             Player g = multiMgr.getCurrentGuesser();
             if (s.isWon()) {
-                // Tiebreaker uses the FULL formula (chances + time bonus).
+                // Le départage utilise la formule COMPLÈTE (chances + bonus de temps).
                 long pts  = s.calculateScore();
                 double secs = s.calculateTimeScore() / 1000.0;
                 g.addMatchScore((int) pts);
@@ -345,31 +349,31 @@ public class GameWindow extends Application {
             }
 
             if (!isSecondHalf) {
-                // Pass the storm to the other captain — using the SAME
-                // word so the contest is fair.
+                // Passe la tempête à l'autre capitaine — en utilisant
+                // le MÊME mot pour que la compétition reste équitable.
                 multiMgr.switchTurn();
                 playTieBreakerHalf(true, word);
             } else {
-                // Both have weathered (or sunk in) the storm. Compare scores.
+                // Les deux ont affronté (ou sombré dans) la tempête. On compare les scores.
                 handleMatchEnd();
             }
         });
     }
 
     // =================================================================
-    //  GAME SCENE  ← KEY METHOD
+    //  SCÈNE DE JEU  ← MÉTHODE CLÉ
     // =================================================================
     /**
-     * Builds the game screen with a three-layer root:
+     * Construit l'écran de jeu avec une racine en trois couches :
      * <pre>
      *   StackPane (gameRoot)
-     *     ├─ BackgroundPane  (bg image fills 100% of window)
-     *     ├─ HangmanCanvas   (transparent Pane, also fills 100%;
-     *     │                   pirate ImageViews bound to parent size)
-     *     └─ uiLayer         (transparent StackPane for all controls)
-     *          ├─ topBar     centred at top
-     *          ├─ rightPane  word + keyboard + quit, anchored right
-     *          └─ chancesLabel  anchored bottom-left
+     *     ├─ BackgroundPane  (l'image de fond remplit 100% de la fenêtre)
+     *     ├─ HangmanCanvas   (Pane transparent qui remplit aussi 100% ;
+     *     │                   ImageViews du pirate liés à la taille parente)
+     *     └─ uiLayer         (StackPane transparent pour tous les contrôles)
+     *          ├─ topBar     centré en haut
+     *          ├─ rightPane  mot + clavier + quitter, ancré à droite
+     *          └─ chancesLabel  ancré en bas à gauche
      * </pre>
      */
     private void showGameScene(String headerText, Runnable onRoundEnd) {
@@ -383,7 +387,7 @@ public class GameWindow extends Application {
         wordTileBox = new HBox(8);
         wordTileBox.setAlignment(Pos.CENTER);
 
-        // ── keyboard wiring ──────────────────────────────────────────
+        // ── câblage du clavier ───────────────────────────────────────
         keyboard.setOnLetterPressed(c -> {
             try {
                 GameSession s = activeSession();
@@ -395,74 +399,77 @@ public class GameWindow extends Application {
                     Platform.runLater(() -> {
                         try { onRoundEnd.run(); }
                         catch (Throwable t) {
-                            showError("Round end failed:\n" + t.getMessage()); showMainMenu();
+                            showError("Échec en fin de manche :\n" + t.getMessage()); showMainMenu();
                         }
                     });
                 }
             } catch (Throwable t) {
-                showError("Keyboard error:\n" + t.getMessage());
+                showError("Erreur clavier :\n" + t.getMessage());
             }
         });
 
-        // ── quit button ───────────────────────────────────────────────
+        // ── bouton quitter ────────────────────────────────────────────
         Button quit = bigButton("⌂  Return to Port", "button-danger");
         quit.setPrefSize(220, 38);
         quit.setOnAction(e -> confirmAbandon());
 
-        // ── TOP BAR: wooden sign centred at top ───────────────────────
+        // ── BARRE DU HAUT : pancarte en bois centrée en haut ──────────
         Label roundLbl = new Label(headerText);
-        // 2. Upgraded its style class to 'game-title-sign' so it inherits the larger font/colors
+        // 2. Classe de style passée à 'game-title-sign' pour qu'elle
+        //    hérite des couleurs/police plus grandes.
         roundLbl.getStyleClass().add("game-title-sign");
 
-        // 3. Changed the VBox to only include our dynamic label
+        // 3. Le VBox ne contient plus que notre label dynamique
         VBox topBar = new VBox(roundLbl);
         topBar.setAlignment(Pos.CENTER);
-        topBar.setPadding(new Insets(14, 0, 0, 0)); // Slightly increased top padding to center it on the wooden asset
+        topBar.setPadding(new Insets(14, 0, 0, 0)); // padding du haut un peu augmenté pour centrer sur la pancarte en bois
         topBar.setBackground(Background.EMPTY);
         topBar.setPickOnBounds(false);
 
-        // ── RIGHT PANE: word + status + keyboard + quit ───────────────
-        // This panel is transparent and sits on the RIGHT side of the
-        // window, leaving the left area free for the pirate to show through.
+        // ── PANNEAU DROIT : mot + statut + clavier + quitter ──────────
+        // Ce panneau est transparent et se place sur le CÔTÉ DROIT de
+        // la fenêtre, laissant la zone gauche libre pour que le pirate
+        // soit visible à travers.
         VBox rightPane = new VBox(12, wordTileBox, statusLabel, keyboard, quit);
         rightPane.setAlignment(Pos.CENTER);
         rightPane.setPadding(new Insets(0, 28, 20, 0));
         rightPane.setBackground(Background.EMPTY);
         rightPane.setMaxWidth(530);
 
-        // ── UI LAYER: stacks topBar (top), rightPane (centre-right),
-        //             chancesLabel (bottom-left) ─────────────────────
+        // ── COUCHE UI : empile topBar (haut), rightPane (centre-droite),
+        //               chancesLabel (bas-gauche) ─────────────────────
         StackPane uiLayer = new StackPane();
         uiLayer.setBackground(Background.EMPTY);
         uiLayer.setPickOnBounds(false);
 
-        // topBar — top-centre
+        // topBar — haut-centre
         StackPane.setAlignment(topBar, Pos.TOP_CENTER);
 
-        // rightPane — centre-right
+        // rightPane — centre-droite
         StackPane.setAlignment(rightPane, Pos.CENTER_RIGHT);
         StackPane.setMargin(rightPane, new Insets(60, 0, 0, 0));
 
-        // chancesLabel — bottom-left (in the dark footer strip)
-        // chancesLabel — bottom-left (Moved up and right to fit inside the treasure chest)
+        // chancesLabel — bas-gauche (dans la bande sombre du pied)
+        // chancesLabel — bas-gauche (remonté et déplacé à droite pour s'insérer dans le coffre au trésor)
         StackPane.setAlignment(chancesLabel, Pos.BOTTOM_LEFT);
 
-// Adjust these values to position it perfectly over your asset box!
-// Insets parameters are: (Top, Right, Bottom, Left)
+// Ajustez ces valeurs pour le positionner parfaitement sur votre asset !
+// Paramètres d'Insets : (Haut, Droite, Bas, Gauche)
         StackPane.setMargin(chancesLabel, new Insets(0, 0, 90, 180));
 
         uiLayer.getChildren().addAll(topBar, rightPane, chancesLabel);
 
-        // ── GAME ROOT: bg | pirate overlay | ui ──────────────────────
-        // The HangmanCanvas and uiLayer both fill the whole StackPane,
-        // so the canvas's width/height bindings resolve to the full
-        // window size and fractional positioning works correctly.
+        // ── RACINE DU JEU : fond | superposition pirate | ui ─────────
+        // Le HangmanCanvas et l'uiLayer remplissent tous deux la totalité
+        // du StackPane, donc les liaisons largeur/hauteur du canvas se
+        // résolvent à la taille complète de la fenêtre et le
+        // positionnement fractionnel fonctionne correctement.
         StackPane gameRoot = new StackPane();
 
-        // Assign the background to our class variable so we can change its image later
+        // Affecte le fond à notre variable de classe pour pouvoir changer son image plus tard
         gameBgPane = new BackgroundPane(new StackPane(), "/hangman/resources/background.png");
 
-        // Added ONLY the bg and ui layer (canvas is gone!)
+        // Ajouté UNIQUEMENT le bg et la couche ui (le canvas a disparu !)
         gameRoot.getChildren().addAll(gameBgPane, uiLayer);
 
         StackPane.setAlignment(gameBgPane, Pos.TOP_LEFT);
@@ -495,16 +502,17 @@ public class GameWindow extends Application {
     }
 
     /**
-     * Refreshes all live HUD elements from the current {@link GameSession}.
+     * Rafraîchit tous les éléments HUD en direct depuis la
+     * {@link GameSession} actuelle.
      */
     public void updateUI() {
         GameSession s = activeSession();
         if (s == null) return;
 
-        // ── hangman background stage ─────────────────────────────────
+        // ── étape du fond du pendu ───────────────────────────────────
         int mistakes = s.getMaxChances() - s.getRemainingChances();
         if (mistakes == 0) {
-            // No mistakes = clean background
+            // Aucune erreur = fond propre
             gameBgPane.setBackgroundImage("/hangman/resources/background.png");
         } else {
             String[] paths = {
@@ -515,13 +523,13 @@ public class GameWindow extends Application {
                     "/hangman/resources/full_pirate.png"
             };
             int stages = paths.length;
-            // Calculate which stage image to show based on max chances
+            // Calcule quelle image d'étape afficher selon le nombre max de chances
             int stage = (int) Math.ceil(((double) mistakes / s.getMaxChances()) * stages) - 1;
             stage = Math.min(stage, stages - 1);
 
             gameBgPane.setBackgroundImage(paths[stage]);
         }
-        // ── word tiles ───────────────────────────────────────────────
+        // ── tuiles du mot ────────────────────────────────────────────
         wordTileBox.getChildren().clear();
         for (char ch : s.getHiddenPassword()) {
             if (ch == ' ') {
@@ -536,10 +544,10 @@ public class GameWindow extends Application {
             }
         }
 
-        // ── mistakes counter ─────────────────────────────────────────
+        // ── compteur d'erreurs ───────────────────────────────────────
         chancesLabel.setText("MISTAKES: " + mistakes + "/" + s.getMaxChances());
 
-        // ── status ───────────────────────────────────────────────────
+        // ── statut ───────────────────────────────────────────────────
         statusLabel.getStyleClass().removeAll("status-won", "status-lost");
         if      (s.isWon())  { statusLabel.setText("⚓  TREASURE FOUND  ⚓"); statusLabel.getStyleClass().add("status-won"); }
         else if (s.isLost()) { statusLabel.setText("☠  LOST AT SEA  ☠");    statusLabel.getStyleClass().add("status-lost"); }
@@ -547,7 +555,7 @@ public class GameWindow extends Application {
     }
 
     // =================================================================
-    //  LEADERBOARD
+    //  CLASSEMENT
     // =================================================================
     private void showLeaderboardPicker() {
         Label title = styledLabel("Wall of Legends", "title-sub");
@@ -584,7 +592,7 @@ public class GameWindow extends Application {
                 list.getItems().add(String.format(" %s  %2d.  %s", medal, rank++, r));
             }
             if (rows.isEmpty()) list.getItems().add("   (no legends yet)");
-        } catch (RuntimeException ex) { list.getItems().add("Error: " + ex.getMessage()); }
+        } catch (RuntimeException ex) { list.getItems().add("Erreur : " + ex.getMessage()); }
 
         Button back = bigButton("← Back", null);
         back.setOnAction(e -> showLeaderboardPicker());
@@ -595,7 +603,7 @@ public class GameWindow extends Application {
     }
 
     // =================================================================
-    //  HELPERS
+    //  AIDES
     // =================================================================
     private VBox menuCard(double maxW, double maxH) {
         VBox card = new VBox(12);
@@ -626,11 +634,11 @@ public class GameWindow extends Application {
         return b;
     }
 
-    // BEFORE: return new BackgroundPane(inner);
+    // AVANT : return new BackgroundPane(inner);
     private Parent centerWrap(Node content) {
         StackPane inner = new StackPane(content);
         inner.setPadding(new Insets(20));
-        // Pass your new menu background image here!
+        // Passez ici votre nouvelle image de fond du menu !
         return new BackgroundPane(inner, "/hangman/resources/menu_background.png");
     }
 

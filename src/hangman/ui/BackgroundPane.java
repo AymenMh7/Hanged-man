@@ -11,27 +11,27 @@ import java.net.URL;
 
 public class BackgroundPane extends StackPane {
 
-    private ImageView bgImageView; // Extracted as a class field
+    private ImageView bgImageView; // Extrait comme champ de la classe
 
     public BackgroundPane(Node content, String imagePath) {
         setBackground(Background.EMPTY);
         setStyle("-fx-background-color: #1A0F05;");
 
-        // Initialize the ImageView
+        // Initialisation de l'ImageView
         bgImageView = new ImageView();
         bgImageView.setPreserveRatio(false);
         bgImageView.fitWidthProperty().bind(widthProperty());
         bgImageView.fitHeightProperty().bind(heightProperty());
         bgImageView.setMouseTransparent(true);
 
-        // Load the initial image
+        // Charge l'image initiale
         setBackgroundImage(imagePath);
 
         getChildren().addAll(bgImageView, content);
     }
 
     /**
-     * Swaps the current background image dynamically.
+     * Change dynamiquement l'image de fond actuelle.
      */
     public void setBackgroundImage(String imagePath) {
         Image newImg = loadImage(imagePath);
@@ -55,7 +55,7 @@ public class BackgroundPane extends StackPane {
         }
 
         if (url == null) {
-            System.err.println("[BackgroundPane] Image not found: " + resourcePath);
+            System.err.println("[BackgroundPane] Image introuvable : " + resourcePath);
             return null;
         }
         return new Image(url.toExternalForm());

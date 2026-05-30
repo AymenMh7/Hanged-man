@@ -4,12 +4,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * GameSession is the generic "engine" running a single round of Hangman.
+ * GameSession est le "moteur" générique qui exécute une manche du Pendu.
  *
- * It is intentionally dumb: it doesn't know whether it is part of a
- * single-player run or one half of a 1v1 match. The caller hands it a
- * word and a number of allowed mistakes, then feeds it guesses one
- * character at a time.
+ * Elle est volontairement bête : elle ne sait pas si elle fait partie
+ * d'une partie solo ou d'une moitié d'un match 1v1. L'appelant lui
+ * fournit un mot et un nombre d'erreurs autorisées, puis lui transmet
+ * les lettres devinées une par une.
  */
 public class GameSession {
 
@@ -39,10 +39,11 @@ public class GameSession {
     }
 
     /**
-     * Submits one guess.
-     * @return true on a hit (letter is in the word), false otherwise.
-     *         A letter already guessed counts as neither hit nor miss
-     *         and returns false without spending a chance.
+     * Soumet une tentative de lettre.
+     * @return true en cas de réussite (la lettre est dans le mot),
+     *         false sinon. Une lettre déjà jouée ne compte ni comme
+     *         réussite ni comme échec et renvoie false sans dépenser
+     *         de chance.
      */
     public boolean guess(char c) {
         if (finished) return false;
@@ -82,8 +83,9 @@ public class GameSession {
     }
 
     /**
-     * Time the round took, in milliseconds. Lower is better.
-     * If called before the round ends, returns the elapsed-so-far.
+     * Temps qu'a duré la manche, en millisecondes. Plus c'est faible,
+     * mieux c'est. Appelée avant la fin de la manche, renvoie le temps
+     * écoulé jusque-là.
      */
     public long calculateTimeScore() {
         long stop = (endTime > 0) ? endTime : System.currentTimeMillis();
@@ -91,16 +93,18 @@ public class GameSession {
     }
 
     /**
-     * Combined score: chances + time bonus. Used for the SINGLE-PLAYER
-     * leaderboard and for the multiplayer TIEBREAKER round (where time
-     * matters because both players race to solve the same word).
+     * Score combiné : chances + bonus de temps. Utilisé pour le
+     * classement SOLO et pour la manche de DÉPARTAGE multijoueur
+     * (où le temps compte parce que les deux joueurs courent pour
+     * résoudre le même mot).
      *
-     * Formula: 100 per remaining chance + a time bonus that starts at
-     * 1000 and loses 10 per second elapsed (floor 0). So a fast clean
-     * win with most chances intact scores around 1500–2000; a slow,
-     * scraping win still scores 100–300.
+     * Formule : 100 par chance restante + un bonus de temps qui
+     * commence à 1000 et perd 10 par seconde écoulée (minimum 0).
+     * Une victoire rapide et nette avec la plupart des chances
+     * intactes vaut autour de 1500–2000 ; une victoire de justesse
+     * et lente reste à 100–300.
      *
-     * Returns 0 if the round was lost.
+     * Renvoie 0 si la manche a été perdue.
      */
     public long calculateScore() {
         if (!isWon()) return 0;
@@ -111,18 +115,19 @@ public class GameSession {
     }
 
     /**
-     * Score based purely on remaining chances — time is ignored. Used
-     * for normal MULTIPLAYER rounds where each captain has their own
-     * word to solve, so racing against the clock wouldn't be fair.
+     * Score basé uniquement sur les chances restantes — le temps est
+     * ignoré. Utilisé pour les manches MULTIJOUEUR normales où chaque
+     * capitaine a son propre mot à résoudre ; courir contre la montre
+     * ne serait pas équitable.
      *
-     * Formula: 100 per remaining chance. Returns 0 if the round was lost.
+     * Formule : 100 par chance restante. Renvoie 0 si la manche est perdue.
      */
     public long calculateChanceScore() {
         if (!isWon()) return 0;
         return (long) remainingChances * 100L;
     }
 
-    // ---------- accessors ----------
+    // ---------- accesseurs ----------
 
     public String getWordToGuess()     { return wordToGuess; }
     public char[] getHiddenPassword()  { return hiddenPassword.clone(); }
@@ -132,7 +137,7 @@ public class GameSession {
     public long   getStartTime()       { return startTime; }
     public long   getEndTime()         { return endTime; }
 
-    /** Convenience for the UI: "_ a _ _ l e". */
+    /** Pratique pour l'interface : "_ a _ _ l e". */
     public String getDisplayWord() {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < hiddenPassword.length; i++) {

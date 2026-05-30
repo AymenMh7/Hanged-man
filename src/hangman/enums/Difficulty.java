@@ -1,14 +1,14 @@
 package hangman.enums;
 
 /**
- * Difficulty defines the parameters for every game mode — the
- * "rulebook" of Hangman. Each level carries:
- *   - singlePlayerChances : how many mistakes the solo player is allowed
- *   - minLength / maxLength : valid word-length window for the 1v1 secret word
+ * Difficulty définit les paramètres de chaque mode de jeu — le
+ * "règlement" du Pendu. Chaque niveau contient :
+ *   - singlePlayerChances : nombre d'erreurs autorisées en solo
+ *   - minLength / maxLength : intervalle de longueur du mot secret en 1v1
  *
- * Single-player rule: harder difficulty = FEWER chances. The 1v1
- * tiebreaker mechanic uses {@link #getNextDifficulty()} to escalate
- * sudden-death rounds.
+ * Règle solo : plus la difficulté est élevée, MOINS il y a de chances.
+ * Le mécanisme de manche de départage en 1v1 utilise
+ * {@link #getNextDifficulty()} pour passer à la difficulté supérieure.
  */
 public enum Difficulty {
 
@@ -40,14 +40,14 @@ public enum Difficulty {
     }
 
     /**
-     * Used by the 1v1 tiebreaker mechanic.
-     * Returns the next level up; INSANE returns itself (already max).
+     * Utilisée par le mécanisme de manche de départage en 1v1.
+     * Renvoie le niveau supérieur ; INSANE se renvoie lui-même (déjà au max).
      */
     public Difficulty getNextDifficulty() {
         Difficulty[] all = Difficulty.values();
         int next = this.ordinal() + 1;
         if (next >= all.length) {
-            return INSANE; // already at the top
+            return INSANE; // déjà au niveau maximum
         }
         return all[next];
     }

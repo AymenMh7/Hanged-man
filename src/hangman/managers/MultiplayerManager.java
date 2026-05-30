@@ -9,14 +9,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * 1v1 multiplayer mode.
+ * Mode multijoueur 1v1.
  *
- * Each round, one player types a secret word and the other tries to
- * guess it. The number of chances the guesser receives is derived from
- * the secret word itself: unique-letter count, capped at 7.
+ * À chaque manche, un joueur saisit un mot secret et l'autre essaie
+ * de le deviner. Le nombre de chances que reçoit le devineur dépend
+ * du mot secret lui-même : nombre de lettres uniques, plafonné à 7.
  *
- * If the match ends tied, {@link #startTieBreaker()} fetches a random
- * word from the next-harder difficulty and runs a sudden-death round.
+ * Si le match se termine à égalité, {@link #startTieBreaker()} récupère
+ * un mot aléatoire à la difficulté supérieure et lance une manche de
+ * mort subite.
  */
 public class MultiplayerManager extends GameManager {
 
@@ -41,14 +42,14 @@ public class MultiplayerManager extends GameManager {
         this.baseDifficulty  = baseDifficulty;
         this.totalRounds     = rounds;
         this.currentRound    = 0;
-        this.isPlayer1Turn   = true;   // p1 chooses the secret word first
+        this.isPlayer1Turn   = true;   // p1 choisit le mot secret en premier
         this.isTieBreaker    = false;
         this.dictionary      = dictionary;
     }
 
     /**
-     * Verifies the proposed secret word fits the base difficulty's
-     * length window AND contains only letters.
+     * Vérifie que le mot secret proposé respecte la fenêtre de longueur
+     * de la difficulté de base ET ne contient que des lettres.
      */
     public boolean validateSecretWord(String word) {
         if (word == null) return false;
@@ -62,12 +63,12 @@ public class MultiplayerManager extends GameManager {
     }
 
     /**
-     * Counts unique letters in the secret word — that's how many
-     * chances the opponent gets. Strictly capped at 7.
+     * Compte les lettres uniques dans le mot secret — c'est le nombre
+     * de chances que reçoit l'adversaire. Plafonné strictement à 7.
      *
-     * (Inverted-difficulty logic: a longer, more varied word actually
-     *  gives the guesser MORE chances, but discovering all those
-     *  letters is itself harder.)
+     * (Logique de difficulté inversée : un mot plus long et plus varié
+     *  donne en fait PLUS de chances au devineur, mais découvrir toutes
+     *  ces lettres est en soi plus difficile.)
      */
     int calculateOpponentChances(String word) {
         if (word == null || word.isEmpty()) return 0;
@@ -79,14 +80,14 @@ public class MultiplayerManager extends GameManager {
     }
 
     /**
-     * Begins one half-round: the current chooser provides the secret
-     * word, and the other player becomes the guesser.
+     * Démarre une demi-manche : celui qui a la main fournit le mot
+     * secret, et l'autre joueur devient le devineur.
      */
     public void startHalfRound(String secretWord) {
         if (!validateSecretWord(secretWord)) {
             throw new IllegalArgumentException(
-                "Secret word must contain only letters and have length between "
-              + baseDifficulty.getMinLength() + " and "
+                "Le mot secret ne doit contenir que des lettres et avoir une longueur entre "
+              + baseDifficulty.getMinLength() + " et "
               + baseDifficulty.getMaxLength());
         }
         int chances = calculateOpponentChances(secretWord);
@@ -94,28 +95,28 @@ public class MultiplayerManager extends GameManager {
     }
 
     /**
-     * Convenience round-start that consumes whatever the current
-     * chooser provided. The caller (UI) typically prefers
-     * {@link #startHalfRound(String)} so it can collect the word.
+     * Démarrage de manche de commodité qui consomme ce que le chooser
+     * actuel a fourni. L'appelant (l'interface) préfère typiquement
+     * {@link #startHalfRound(String)} pour pouvoir collecter le mot.
      */
     @Override
     public void startRound() {
         throw new UnsupportedOperationException(
-            "Multiplayer rounds are started via startHalfRound(secret).");
+            "Les manches multijoueur se lancent via startHalfRound(secret).");
     }
 
     /**
-     * Flips the turn flag and advances the half-round counter.
-     * One "half-round" = one player guessed one word. {@link #totalRounds}
-     * is also stored in half-rounds so {@link #isMatchOver()} compares
-     * apples to apples.
+     * Bascule le drapeau de tour et avance le compteur de demi-manches.
+     * Une "demi-manche" = un joueur a deviné un mot. {@link #totalRounds}
+     * est également stocké en demi-manches pour que {@link #isMatchOver()}
+     * compare des choses comparables.
      */
     public void switchTurn() {
         currentRound++;
         isPlayer1Turn = !isPlayer1Turn;
     }
 
-    /** Returns the winner, or {@code null} if the match is tied. */
+    /** Renvoie le gagnant, ou {@code null} si le match est à égalité. */
     public Player determineWinner() {
         if (player1.getMatchScore() > player2.getMatchScore()) return player1;
         if (player2.getMatchScore() > player1.getMatchScore()) return player2;
@@ -123,41 +124,41 @@ public class MultiplayerManager extends GameManager {
     }
 
     /**
-     * Runs sudden-death: picks a word from the next-harder difficulty
-     * and creates a session both players will race through.
+     * Lance la mort subite : tire un mot à la difficulté supérieure
+     * et crée une session que les deux joueurs vont s'affronter.
      *
-     * The UI is responsible for actually feeding the guesses and
-     * deciding which player solves it first.
+     * L'interface est responsable de transmettre les lettres devinées
+     * et de décider quel joueur résout en premier.
      */
     public void startTieBreaker() {
         startTieBreakerWithWord(pickTieBreakerWord());
     }
 
     /**
-     * Picks a random word from the next-harder difficulty WITHOUT
-     * starting a session. The UI calls this once at the top of a
-     * tiebreaker so both captains can be handed the SAME secret word
-     * in their respective half-rounds.
+     * Tire un mot aléatoire à la difficulté supérieure SANS démarrer
+     * de session. L'interface appelle ceci une seule fois au début
+     * du départage pour que les deux capitaines puissent recevoir le
+     * MÊME mot secret dans leurs demi-manches respectives.
      */
     public String pickTieBreakerWord() {
         Difficulty harder = baseDifficulty.getNextDifficulty();
         String word = dictionary.getRandomWord(harder);
         if (word == null) {
             throw new IllegalStateException(
-                "Tiebreaker requires a word at difficulty " + harder);
+                "Le départage nécessite un mot à la difficulté " + harder);
         }
         return word;
     }
 
     /**
-     * Starts a tiebreaker half-round with a pre-selected word, so both
-     * captains can face the same target. Each call produces a fresh
-     * GameSession (so the second captain doesn't see the first's
-     * revealed letters).
+     * Démarre une demi-manche de départage avec un mot pré-sélectionné,
+     * de sorte que les deux capitaines puissent affronter la même cible.
+     * Chaque appel produit une nouvelle GameSession (pour que le second
+     * capitaine ne voie pas les lettres révélées du premier).
      */
     public void startTieBreakerWithWord(String word) {
         if (word == null || word.isEmpty()) {
-            throw new IllegalArgumentException("Tiebreaker word must be non-empty");
+            throw new IllegalArgumentException("Le mot de départage ne peut pas être vide");
         }
         this.isTieBreaker = true;
         int chances = Math.min(
@@ -165,7 +166,7 @@ public class MultiplayerManager extends GameManager {
         this.activeSession = new GameSession(word, chances);
     }
 
-    /** Zeros both players' scores and rewinds the round counter. */
+    /** Remet à zéro les scores des deux joueurs et le compteur de manches. */
     public void resetMatch() {
         player1.resetMatchScore();
         player2.resetMatchScore();
@@ -175,7 +176,7 @@ public class MultiplayerManager extends GameManager {
         this.activeSession   = null;
     }
 
-    // ---------- accessors ----------
+    // ---------- accesseurs ----------
 
     public Player getPlayer1()          { return player1; }
     public Player getPlayer2()          { return player2; }
@@ -185,17 +186,17 @@ public class MultiplayerManager extends GameManager {
     public boolean isPlayer1Turn()      { return isPlayer1Turn; }
     public boolean isTieBreaker()       { return isTieBreaker; }
 
-    /** The player who is CURRENTLY guessing (not the one choosing). */
+    /** Le joueur qui est ACTUELLEMENT en train de deviner (pas celui qui choisit). */
     public Player getCurrentGuesser() {
         return isPlayer1Turn ? player2 : player1;
     }
 
-    /** The player who is CURRENTLY choosing the secret word. */
+    /** Le joueur qui est ACTUELLEMENT en train de choisir le mot secret. */
     public Player getCurrentChooser() {
         return isPlayer1Turn ? player1 : player2;
     }
 
-    /** True when every scheduled round has been played. */
+    /** Renvoie true quand toutes les manches prévues ont été jouées. */
     public boolean isMatchOver() {
         return currentRound >= totalRounds;
     }

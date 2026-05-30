@@ -1,13 +1,14 @@
 @echo off
 REM ====================================================================
-REM  One-click MySQL schema loader for Pirate's Cove
-REM  Double-click this file (or run from cmd / PowerShell with .\setup-db.bat)
-REM  to (re)create the hangman_db database and seed words.
+REM  Chargeur de schema MySQL en un clic pour Pirate's Cove
+REM  Double-cliquez sur ce fichier (ou executez-le depuis cmd /
+REM  PowerShell avec .\setup-db.bat) pour (re)creer la base
+REM  hangman_db et inserer les mots de depart.
 REM ====================================================================
 
 setlocal
 
-REM Common install paths — first one found wins.
+REM Chemins d'installation courants — le premier trouve gagne.
 set "MYSQL_EXE="
 for %%P in (
     "C:\Program Files\MySQL\MySQL Server 8.4\bin\mysql.exe"
@@ -19,15 +20,15 @@ for %%P in (
 )
 
 if "%MYSQL_EXE%"=="" (
-    echo [ERROR] Couldn't find mysql.exe in the usual locations.
-    echo Edit this script and add your MySQL install path to the loop above.
+    echo [ERREUR] mysql.exe introuvable aux emplacements habituels.
+    echo Modifiez ce script et ajoutez le chemin de votre installation MySQL dans la boucle ci-dessus.
     pause
     exit /b 1
 )
 
-echo Using: %MYSQL_EXE%
-echo Loading sql\schema.sql into hangman_db ...
-echo (You'll be prompted for your MySQL root password.)
+echo Utilisation de : %MYSQL_EXE%
+echo Chargement de sql\schema.sql dans hangman_db ...
+echo (Le mot de passe root MySQL vous sera demande.)
 echo.
 
 "%MYSQL_EXE%" -u root -p < "%~dp0sql\schema.sql"
@@ -35,9 +36,9 @@ echo.
 set RC=%ERRORLEVEL%
 echo.
 if %RC% EQU 0 (
-    echo [OK] Schema loaded. You can launch the game now.
+    echo [OK] Schema charge. Vous pouvez lancer le jeu maintenant.
 ) else (
-    echo [FAIL] mysql returned %RC%
+    echo [ECHEC] mysql a renvoye %RC%
 )
 pause
 exit /b %RC%

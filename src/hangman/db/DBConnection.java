@@ -8,27 +8,28 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 /**
- * Singleton MySQL connection manager.
+ * Gestionnaire singleton de la connexion MySQL.
  *
- * The constructor is private — DAO classes obtain the active connection
- * through {@link #getInstance()}.{@link #getConnection()}, guaranteeing
- * the application only ever opens one JDBC connection.
+ * Le constructeur est privé — les classes DAO obtiennent la connexion
+ * active via {@link #getInstance()}.{@link #getConnection()}, garantissant
+ * que l'application n'ouvre qu'une seule connexion JDBC.
  *
- * Credentials are read from <code>config.properties</code> sitting next
- * to the executable (or supplied via JVM system properties).
+ * Les identifiants sont lus depuis <code>config.properties</code> placé
+ * à côté de l'exécutable (ou fournis via les propriétés système de la JVM).
  */
 public final class DBConnection {
 
-    /** The single instance of the class. */
+    /** L'instance unique de la classe. */
     private static DBConnection instance;
 
-    /** The active JDBC connection object. */
+    /** L'objet de connexion JDBC actif. */
     private Connection connection;
 
     /**
-     * Private constructor — loads the driver and opens the connection.
-     * Throws {@link RuntimeException} if anything fails (we want loud
-     * failures during startup, not silent NPEs later).
+     * Constructeur privé — charge le pilote et ouvre la connexion.
+     * Lance une {@link RuntimeException} en cas d'échec (on veut des
+     * erreurs bruyantes au démarrage, pas des NullPointerException
+     * silencieuses plus tard).
      */
     private DBConnection() {
         try {
@@ -38,20 +39,21 @@ public final class DBConnection {
             String user     = props.getProperty("db.user", "root");
             String password = props.getProperty("db.password", "");
 
-            // Load the MySQL driver explicitly (good practice for plain
-            // Java apps where the ServiceLoader may not pick it up).
+            // Charge le pilote MySQL explicitement (bonne pratique pour
+            // les applications Java standard où le ServiceLoader peut
+            // ne pas le repérer).
             Class.forName("com.mysql.cj.jdbc.Driver");
             this.connection = DriverManager.getConnection(url, user, password);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(
-                "MySQL JDBC Driver not found. Place mysql-connector-j-*.jar in lib/.", e);
+                "Pilote JDBC MySQL introuvable. Placez mysql-connector-j-*.jar dans lib/.", e);
         } catch (SQLException e) {
             throw new RuntimeException(
-                "Could not connect to MySQL — check config.properties.", e);
+                "Impossible de se connecter à MySQL — vérifiez config.properties.", e);
         }
     }
 
-    /** Returns the active instance (creating it the first time). */
+    /** Renvoie l'instance active (la crée à la première utilisation). */
     public static synchronized DBConnection getInstance() {
         if (instance == null) {
             instance = new DBConnection();
@@ -59,33 +61,34 @@ public final class DBConnection {
         return instance;
     }
 
-    /** Returns the live SQL connection — DAOs use this to build statements. */
+    /** Renvoie la connexion SQL active — les DAO l'utilisent pour bâtir les requêtes. */
     public Connection getConnection() {
         return connection;
     }
 
-    /** Closes the connection gracefully on game exit. */
+    /** Ferme proprement la connexion à la sortie du jeu. */
     public void closeConnection() {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
             }
         } catch (SQLException ignored) {
-            // shutting down — nothing we can do
+            // arrêt en cours — on ne peut rien faire
         } finally {
             instance = null;
         }
     }
 
-    /** Loads config.properties from the working directory, if present. */
+    /** Charge config.properties depuis le dossier courant, s'il existe. */
     private static Properties loadConfig() {
         Properties props = new Properties();
         try (InputStream in = new FileInputStream("config.properties")) {
             props.load(in);
         } catch (Exception ignored) {
-            // No config file? Fall back to JVM system properties / defaults.
+            // Pas de fichier de config ? On retombe sur les propriétés
+            // système de la JVM ou les valeurs par défaut.
         }
-        // System properties override file (handy for tests).
+        // Les propriétés système ont priorité sur le fichier (pratique pour les tests).
         for (String key : new String[]{"db.url", "db.user", "db.password"}) {
             String sys = System.getProperty(key);
             if (sys != null) {

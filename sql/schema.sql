@@ -1,6 +1,6 @@
 -- =====================================================================
--- Hangman Game - MySQL Schema
--- Run this script once to create the database and populate sample data.
+-- Jeu du Pendu - Schéma MySQL
+-- Exécutez ce script une fois pour créer la base et insérer les données.
 -- =====================================================================
 
 CREATE DATABASE IF NOT EXISTS hangman_db
@@ -10,8 +10,8 @@ CREATE DATABASE IF NOT EXISTS hangman_db
 USE hangman_db;
 
 -- ---------------------------------------------------------------------
--- Dictionary table: words classified by difficulty.
--- Difficulty mirrors the Java enum: EASY, MEDIUM, HARD, INSANE.
+-- Table Dictionary : mots classés par difficulté.
+-- Difficulty reflète l'enum Java : EASY, MEDIUM, HARD, INSANE.
 -- ---------------------------------------------------------------------
 DROP TABLE IF EXISTS Dictionary;
 CREATE TABLE Dictionary (
@@ -22,8 +22,9 @@ CREATE TABLE Dictionary (
 );
 
 -- ---------------------------------------------------------------------
--- Leaderboard table: best single-player scores per difficulty.
--- Score combines remaining chances + a time bonus — HIGHER is better.
+-- Table Leaderboard : meilleurs scores solo par difficulté.
+-- Le score combine les chances restantes + un bonus de temps —
+-- plus c'est ÉLEVÉ, mieux c'est.
 -- ---------------------------------------------------------------------
 DROP TABLE IF EXISTS Leaderboard;
 CREATE TABLE Leaderboard (
@@ -36,7 +37,7 @@ CREATE TABLE Leaderboard (
 );
 
 -- ---------------------------------------------------------------------
--- Sample words
+-- Exemples de mots
 -- ---------------------------------------------------------------------
 INSERT INTO Dictionary (word, difficulty) VALUES
     ('cat',     'EASY'),

@@ -7,11 +7,11 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
 /**
- * Popup card shown after a 1v1 match ends.
- * Two choices: Play Again or Return to Menu.
+ * Carte popup affichée à la fin d'un match 1v1.
+ * Deux choix : Rejouer ou Retour au Menu.
  *
- * Visual styling comes from {@code theme.css} via the {@code .card}
- * class; this widget only assembles the layout.
+ * Le style visuel vient de {@code theme.css} via la classe
+ * {@code .card} ; ce widget ne fait que monter la mise en page.
  */
 public class MatchEndMenu extends VBox {
 

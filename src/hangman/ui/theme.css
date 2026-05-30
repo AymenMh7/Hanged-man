@@ -1,9 +1,9 @@
 /* =====================================================================
-   Pirate's Hangman — Master Theme
+   Pirate's Hangman — Thème principal
    ===================================================================== */
 
 /* =====================================================================
-   ROOT
+   ROOT (racine)
    ===================================================================== */
 .root {
     -fx-font-family: "Georgia", "Cambria", serif;
@@ -12,7 +12,7 @@
 }
 
 /* =====================================================================
-   TYPOGRAPHY
+   TYPOGRAPHIE
    ===================================================================== */
 .title-main {
     -fx-font-family: "Cambria", "Georgia", serif;
@@ -46,7 +46,7 @@
 }
 
 /* =====================================================================
-   GAME-SCENE TITLE SIGN  (dark wooden plaque, top-centre)
+   PANCARTE DE TITRE DE SCÈNE DE JEU (plaque en bois sombre, haut-centre)
    ===================================================================== */
 .game-title-sign {
     -fx-font-family: "Cambria", "Georgia", serif;
@@ -75,7 +75,7 @@
 }
 
 /* =====================================================================
-   WORD TILES  (individual letter boxes in the guessing area)
+   TUILES DU MOT (cases de lettres individuelles dans la zone de devinette)
    ===================================================================== */
 .word-tile {
     -fx-min-width:  50px;
@@ -97,7 +97,7 @@
                 innershadow(gaussian, rgba(255,240,180,0.28), 3, 0.3, 0, 1);
 }
 
-/* Unrevealed tile — only a bottom underline, nearly transparent */
+/* Tuile non révélée — seulement un soulignement en bas, presque transparent */
 .word-tile-hidden {
     -fx-background-color:
         linear-gradient(to bottom,
@@ -111,26 +111,26 @@
 }
 
 /* =====================================================================
-   MISTAKES COUNTER  (Repositioned inside the background's treasure chest)
+   COMPTEUR D'ERREURS (repositionné dans le coffre au trésor du fond)
    ===================================================================== */
 .chances-label {
-    /* Use a thick, clean, high-visibility font style */
+    /* Utilisation d'une police épaisse, nette et bien visible */
     -fx-font-family: "Arial Black", "Impact", sans-serif;
     -fx-font-size: 22px;
     -fx-font-weight: bold;
 
-    /* Solid high-contrast black */
+    /* Noir solide à fort contraste */
     -fx-text-fill: #000000;
 
     -fx-background-color: transparent;
     -fx-border-width: 0;
     -fx-padding: 0;
 
-    /* A very subtle, small shadow to keep the text perfectly sharp and legible */
+    /* Une ombre très subtile pour garder le texte parfaitement net et lisible */
     -fx-effect: dropshadow(gaussian, rgba(255,255,255,0.25), 1, 1, 0, 1);
 }
 /* =====================================================================
-   STATUS LABELS  (won / lost)
+   LABELS DE STATUT (gagné / perdu)
    ===================================================================== */
 .status-won {
     -fx-font-family: "Cambria", "Georgia", serif;
@@ -149,7 +149,7 @@
 }
 
 /* =====================================================================
-   KEYBOARD  — wooden coin keys
+   CLAVIER — touches en pièces de bois
    ===================================================================== */
 .key {
     -fx-background-color:
@@ -157,20 +157,20 @@
             #E2BE82 0%, #C39B5A 60%, #9A6D32 100%);
     -fx-text-fill: #3A2818;
     -fx-font-family: "Georgia";
-    -fx-font-size: 18px; /* Slightly larger text to fill the tile */
+    -fx-font-size: 18px; /* Texte un peu plus grand pour remplir la tuile */
     -fx-font-weight: bold;
 
-    /* Critical for keeping the letters visible */
+    /* Indispensable pour garder les lettres visibles */
     -fx-alignment: center;
     -fx-padding: 2;
 
-    /* SHAPE FIX 1: Taller than they are wide, like the reference image */
+    /* CORRECTION DE FORME 1 : plus haut que large, comme l'image de référence */
     -fx-min-width:  38px;
     -fx-min-height: 48px;
     -fx-max-width:  38px;
     -fx-max-height: 48px;
 
-    /* SHAPE FIX 2: Small rounded corners instead of circles */
+    /* CORRECTION DE FORME 2 : petits coins arrondis plutôt que des cercles */
     -fx-background-radius: 6;
     -fx-border-radius: 6;
 
@@ -203,7 +203,7 @@
 }
 
 /* =====================================================================
-   BUTTONS
+   BOUTONS
    ===================================================================== */
 .button {
     -fx-background-color:
@@ -257,7 +257,7 @@
 }
 
 /* =====================================================================
-   PARCHMENT CARDS  (menus)
+   CARTES DE PARCHEMIN (menus)
    ===================================================================== */
 .card {
     -fx-background-color:
@@ -278,7 +278,7 @@
 }
 
 /* =====================================================================
-   INPUT FIELDS
+   CHAMPS DE SAISIE
    ===================================================================== */
 .text-field, .password-field {
     -fx-background-color: #FFF7DE;
@@ -333,7 +333,7 @@
 .spinner .decrement-arrow { -fx-background-color: #FFF3D6; }
 
 /* =====================================================================
-   LISTVIEW  (leaderboard)
+   LISTVIEW (classement)
    ===================================================================== */
 .list-view {
     -fx-background-color: #FFF7DE;
@@ -354,7 +354,7 @@
 .list-view .list-cell:hover { -fx-background-color: rgba(184,134,43,0.22); }
 
 /* =====================================================================
-   DIALOGS
+   BOÎTES DE DIALOGUE
    ===================================================================== */
 .dialog-pane {
     -fx-background-color:

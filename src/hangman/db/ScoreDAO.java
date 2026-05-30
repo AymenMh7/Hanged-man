@@ -11,15 +11,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Data Access Object for the Leaderboard table.
+ * Data Access Object pour la table Leaderboard.
  *
- * "Higher is better" — the {@code score} column blends remaining
- * chances and time bonus, so the top of the board has the highest
- * scores.
+ * "Plus c'est élevé, mieux c'est" — la colonne {@code score} combine
+ * les chances restantes et le bonus de temps, donc le haut du
+ * classement contient les scores les plus élevés.
  */
 public class ScoreDAO {
 
-    /** Inserts a finished round into the leaderboard. */
+    /** Insère une manche terminée dans le classement. */
     public void saveScore(Difficulty diff, String playerName, long score) {
         final String sql =
             "INSERT INTO Leaderboard (player_name, difficulty, score) VALUES (?, ?, ?)";
@@ -31,11 +31,11 @@ public class ScoreDAO {
             ps.setLong(3, score);
             ps.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to save score for " + playerName, e);
+            throw new RuntimeException("Échec de la sauvegarde du score pour " + playerName, e);
         }
     }
 
-    /** Returns up to ten leaderboard rows for a difficulty, highest first. */
+    /** Renvoie jusqu'à dix lignes du classement pour une difficulté, du plus élevé au plus bas. */
     public List<ScoreRecord> getTop10Scores(Difficulty diff) {
         final String sql =
             "SELECT player_name, score FROM Leaderboard "
@@ -54,15 +54,15 @@ public class ScoreDAO {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to load top scores for " + diff, e);
+            throw new RuntimeException("Échec du chargement des meilleurs scores pour " + diff, e);
         }
         return records;
     }
 
     /**
-     * True if the candidate score would make the top-10 board for this
-     * difficulty (either the board has fewer than 10 rows, or the
-     * candidate is higher than the lowest qualifier).
+     * Renvoie true si le score candidat ferait entrer le joueur dans
+     * le top 10 pour cette difficulté (soit le tableau a moins de 10
+     * lignes, soit le candidat est plus élevé que le moins bon qualifié).
      */
     public boolean isTop10(Difficulty diff, long candidateScore) {
         final String sql =
@@ -84,7 +84,7 @@ public class ScoreDAO {
                 return candidateScore > lowest;
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to check top-10 status for " + diff, e);
+            throw new RuntimeException("Échec de la vérification du statut top 10 pour " + diff, e);
         }
     }
 }

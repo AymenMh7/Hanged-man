@@ -7,11 +7,11 @@ import hangman.models.ScoreRecord;
 import java.util.List;
 
 /**
- * Business-logic wrapper around {@link ScoreDAO}.
+ * Couche de logique métier autour de {@link ScoreDAO}.
  *
- * The managers talk to the ScoreBoard, never to the DAO directly —
- * this gives us one place to add caching, validation, or logging
- * later without touching DAO code.
+ * Les managers parlent au ScoreBoard, jamais directement au DAO —
+ * cela nous donne un point unique pour ajouter du cache, de la
+ * validation ou de la journalisation plus tard, sans toucher au DAO.
  */
 public class ScoreBoard {
 
@@ -21,7 +21,7 @@ public class ScoreBoard {
         this(new ScoreDAO());
     }
 
-    /** Constructor that accepts a DAO — useful for tests. */
+    /** Constructeur qui accepte un DAO — utile pour les tests. */
     public ScoreBoard(ScoreDAO scoreDAO) {
         this.scoreDAO = scoreDAO;
     }
@@ -32,7 +32,7 @@ public class ScoreBoard {
 
     public void addScore(Difficulty diff, String playerName, long score) {
         if (playerName == null || playerName.isBlank()) {
-            playerName = "Anonymous";
+            playerName = "Anonyme";
         }
         scoreDAO.saveScore(diff, playerName, score);
     }

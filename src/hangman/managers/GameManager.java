@@ -3,21 +3,22 @@ package hangman.managers;
 import hangman.models.GameSession;
 
 /**
- * Abstract base of every game mode.
+ * Classe abstraite de base pour chaque mode de jeu.
  *
- * Holds a reference to the currently active {@link GameSession}.
- * Concrete subclasses ({@code SinglePlayerManager}, {@code MultiplayerManager})
- * are responsible for creating that session and reacting to its outcome.
+ * Contient une référence à la {@link GameSession} actuellement active.
+ * Les sous-classes concrètes ({@code SinglePlayerManager},
+ * {@code MultiplayerManager}) sont responsables de la création de cette
+ * session et de la réaction à son résultat.
  */
 public abstract class GameManager {
 
-    /** The session currently being played. May be {@code null} between rounds. */
+    /** La session en cours de jeu. Peut être {@code null} entre les manches. */
     protected GameSession activeSession;
 
     public GameSession getActiveSession() {
         return activeSession;
     }
 
-    /** Each mode launches its rounds differently. */
+    /** Chaque mode lance ses manches différemment. */
     public abstract void startRound();
 }
