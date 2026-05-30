@@ -295,10 +295,14 @@ public class GameWindow extends Application {
 
     private void runTieBreaker() {
         // Sudden death is now TWO halves: both captains get a round at
-        // the harder difficulty, then we compare totals. Whoever scores
-        // more across the two halves wins. If they STILL tie, another
-        // pair of half-rounds runs.
-        playTieBreakerHalf(false);
+        // the harder difficulty solving THE SAME secret word, then we
+        // compare totals. Whoever scores more across the two halves
+        // wins. If they STILL tie, another pair of half-rounds runs
+        // with a fresh word.
+        String word;
+        try { word = multiMgr.pickTieBreakerWord(); }
+        catch (RuntimeException ex) { showError("Tiebreaker failed: " + ex.getMessage()); showMainMenu(); return; }
+        playTieBreakerHalf(false, word);
     }
 
     /**
@@ -306,9 +310,11 @@ public class GameWindow extends Application {
      * is the current guesser, then either hands it to the other captain
      * (when {@code isSecondHalf == false}) or wraps up via
      * {@link #handleMatchEnd()} (when both have played).
+     *
+     * Both halves receive the SAME secret word so the contest is fair.
      */
-    private void playTieBreakerHalf(boolean isSecondHalf) {
-        try { multiMgr.startTieBreaker(); }
+    private void playTieBreakerHalf(boolean isSecondHalf, String word) {
+        try { multiMgr.startTieBreakerWithWord(word); }
         catch (RuntimeException ex) { showError("Tiebreaker failed: " + ex.getMessage()); showMainMenu(); return; }
 
         Player guesser = multiMgr.getCurrentGuesser();
@@ -339,9 +345,10 @@ public class GameWindow extends Application {
             }
 
             if (!isSecondHalf) {
-                // Pass the storm to the other captain BEFORE deciding.
+                // Pass the storm to the other captain — using the SAME
+                // word so the contest is fair.
                 multiMgr.switchTurn();
-                playTieBreakerHalf(true);
+                playTieBreakerHalf(true, word);
             } else {
                 // Both have weathered (or sunk in) the storm. Compare scores.
                 handleMatchEnd();

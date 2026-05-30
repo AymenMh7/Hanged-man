@@ -130,14 +130,38 @@ public class MultiplayerManager extends GameManager {
      * deciding which player solves it first.
      */
     public void startTieBreaker() {
-        this.isTieBreaker = true;
+        startTieBreakerWithWord(pickTieBreakerWord());
+    }
+
+    /**
+     * Picks a random word from the next-harder difficulty WITHOUT
+     * starting a session. The UI calls this once at the top of a
+     * tiebreaker so both captains can be handed the SAME secret word
+     * in their respective half-rounds.
+     */
+    public String pickTieBreakerWord() {
         Difficulty harder = baseDifficulty.getNextDifficulty();
         String word = dictionary.getRandomWord(harder);
         if (word == null) {
             throw new IllegalStateException(
                 "Tiebreaker requires a word at difficulty " + harder);
         }
-        int chances = Math.min(harder.getSinglePlayerChances(), 7);
+        return word;
+    }
+
+    /**
+     * Starts a tiebreaker half-round with a pre-selected word, so both
+     * captains can face the same target. Each call produces a fresh
+     * GameSession (so the second captain doesn't see the first's
+     * revealed letters).
+     */
+    public void startTieBreakerWithWord(String word) {
+        if (word == null || word.isEmpty()) {
+            throw new IllegalArgumentException("Tiebreaker word must be non-empty");
+        }
+        this.isTieBreaker = true;
+        int chances = Math.min(
+            baseDifficulty.getNextDifficulty().getSinglePlayerChances(), 7);
         this.activeSession = new GameSession(word, chances);
     }
 
