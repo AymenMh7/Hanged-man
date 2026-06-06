@@ -485,16 +485,27 @@ public class GameWindow extends Application {
     }
 
     private void confirmAbandon() {
+        // 1. Define custom English buttons
+        ButtonType yesButton = new ButtonType("Yes", ButtonBar.ButtonData.YES);
+        ButtonType noButton = new ButtonType("No", ButtonBar.ButtonData.NO);
+
+        // 2. Pass them into the Alert constructor
         Alert a = new Alert(Alert.AlertType.CONFIRMATION,
                 "Abandon and return to port?\n(Round will be lost.)",
-                ButtonType.YES, ButtonType.NO);
+                yesButton, noButton);
+
         a.setHeaderText("Leaving so soon, captain?");
         styleDialog(a.getDialogPane());
+
+        // 3. Check for your custom 'yesButton' instead of ButtonType.YES
         a.showAndWait().ifPresent(b -> {
-            if (b == ButtonType.YES) { singleMgr = null; multiMgr = null; showMainMenu(); }
+            if (b == yesButton) {
+                singleMgr = null;
+                multiMgr = null;
+                showMainMenu();
+            }
         });
     }
-
     private GameSession activeSession() {
         if (singleMgr != null) return singleMgr.getActiveSession();
         if (multiMgr  != null) return multiMgr.getActiveSession();
